@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { slides, categories } from '../data/slidesData';
-import FlutterEmulator from './FlutterEmulator';
+import FlutterHost from './FlutterHost';
 import BridgeConsole from './BridgeConsole';
 import Playground from './Playground';
 import { BridgeLog } from '../types';
@@ -136,8 +136,8 @@ export default function PresentationLayout() {
             <span className="text-sky-400 font-bold">host_container_div</span>
           </div>
           <div className="flex items-center gap-2 bg-slate-950 border border-slate-800/60 px-3.5 py-1.5 rounded-lg text-[10px] font-mono">
-            <span className="text-slate-500">Active Handlers:</span>
-            <span className="text-emerald-400 font-bold">7 Registered</span>
+            <span className="text-slate-500">Flutter Runtime:</span>
+            <span className="text-emerald-400 font-bold">Real Web Bundle</span>
           </div>
           <button 
             onClick={() => {
@@ -484,33 +484,31 @@ export default function PresentationLayout() {
           
           <div className="flex-1 flex flex-col min-h-0 gap-6">
             
-            {/* Condition render 1: Show standard live embedding simulator */}
-            {currentSlide.demoType !== 'playground' ? (
-              <div className="flex-1 flex flex-col min-h-[350px]">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Tv className="w-4 h-4 text-sky-400" />
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                      Активное окно внедрения OLE 2.0 (Live Flutter Embed)
-                    </span>
-                  </div>
-                  {currentSlide.demoType === 'none' && (
-                    <span className="text-[10px] text-slate-500 italic font-mono">Превью появится на следующем слайде</span>
-                  )}
+            <div className="flex-1 flex flex-col min-h-[350px]">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Tv className="w-4 h-4 text-sky-400" />
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                    Активное окно внедрения OLE 2.0 (Real Flutter Web Embed)
+                  </span>
                 </div>
-
-                <div className="flex-1 min-h-0 relative">
-                  <FlutterEmulator 
-                    demoType={currentSlide.demoType} 
-                    reactState={reactState}
-                    onFlutterStateChange={handleFlutterStateChange}
-                    onDispatchLog={(log) => dispatchBridgeLog(log.sender, log.event, log.payload)}
-                  />
-                </div>
+                {currentSlide.demoType === 'none' && (
+                  <span className="text-[10px] text-slate-500 italic font-mono">Flutter уже смонтирован и ждет команд React</span>
+                )}
               </div>
-            ) : (
-              /* Condition render 2: Show interactive custom playground editor! */
-              <div className="flex-1 flex flex-col min-h-[350px]">
+
+              <div className="flex-1 min-h-0 relative">
+                <FlutterHost
+                  demoType={currentSlide.demoType}
+                  reactState={reactState}
+                  onFlutterStateChange={handleFlutterStateChange}
+                  onDispatchLog={(log) => dispatchBridgeLog(log.sender, log.event, log.payload)}
+                />
+              </div>
+            </div>
+
+            {currentSlide.demoType === 'playground' && (
+              <div className="flex flex-col min-h-[420px]">
                 <div className="mb-2 flex items-center gap-2">
                   <FileCode2 className="w-4 h-4 text-purple-400 animate-pulse" />
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
@@ -519,9 +517,12 @@ export default function PresentationLayout() {
                 </div>
 
                 <div className="flex-1 min-h-0 relative">
-                  <Playground 
+                  <Playground
                     onDispatchCustomEvent={(name, payload) => {
                       dispatchBridgeLog('react', name, payload);
+                      if (typeof window.reactToFlutterBridge === 'function') {
+                        window.reactToFlutterBridge(name, JSON.stringify(payload));
+                      }
                     }}
                     onClearLogs={handleClearLogs}
                     reactState={reactState}

@@ -1,4 +1,5 @@
 node_modules/
+.flutter-sdk/
 build/
 dist/
 coverage/

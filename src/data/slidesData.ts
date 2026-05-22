@@ -13,7 +13,7 @@ export const slides: SlideData[] = [
 Сегодня во фронтенд-разработке возникает аналогичная задача: **внедрить автономные, высокоинтенсивные Flutter-микрофронтенды внутрь систем на React**.
 
 #### Почему Flutter в Web идеален для OLE-интеграции?
-1. **Пиксельная точность:** Flutter рендерит интерфейс через WebAssembly (WASM) и WebGL/Skia (CanvasKit), обеспечивая абсолютно идентичную графику и плавные 60/120 FPS.
+1. **Пиксельная точность:** Flutter рендерит интерфейс через CanvasKit/Skia и WebAssembly-ресурсы движка, обеспечивая одинаковую графику и плавные 60/120 FPS.
 2. **Изолированное состояние:** Приложение Flutter работает совершенно автономно, имея собственную систему управления стейтом и графический конвейер.
 3. **Бесшовная интеграция:** React-приложение выступает хост-платформой, управляющей размерами, жизненным циклом и передачей параметров внутрь Flutter-холста.
 `,
@@ -38,28 +38,20 @@ export const slides: SlideData[] = [
 #### Шаги жизненного цикла инициализации:
 1. Загрузка файла \`flutter.js\`.
 2. Конфигурация локатора точек входа родительского элемента.
-3. Выбор оптимального движка рендеринга (\`canvaskit\` для сложных интерфейсов, либо \`html\` для легковесных текстов).
+3. Выбор оптимального движка рендеринга (\`canvaskit\` для JS-сборки или \`skwasm\` для WASM-сборки).
 4. Ограничение области видимости мышиных и клавиатурных событий только внутри назначенного родительского \`<div>\`.
 `,
-    codeSnippet: `// Безопасное встраивание через JS-интеграцию в React-компонент
+    codeSnippet: `// Безопасное встраивание реального Flutter Web bundle в React-компонент
 import React, { useEffect, useRef } from 'react';
 
-export function FlutterHost({ srcPath }) {
+export function FlutterHost() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // 1. Ждем и инициализируем Flutter Loader
-    window._flutter.loader.loadEntrypoint({
-      serviceWorker: { serviceWorkerVersion: "1.0" },
-      onEntrypointLoaded: async (engineInitializer) => {
-        const appRunner = await engineInitializer.initializeEngine({
-          hostElement: containerRef.current,
-          renderer: "canvaskit", // CanvasKit/WASM рендерер
-          useColorEmoji: true,
-        });
-        
-        await appRunner.runApp();
-      }
+    window.runEmbeddedFlutter({
+      hostElement: containerRef.current!,
+      assetBase: '/flutter_embed/',
+      renderer: 'canvaskit'
     });
   }, []);
 
@@ -83,27 +75,24 @@ export function FlutterHost({ srcPath }) {
 3. Изменение состояния в React мгновенно изменяет отрисовку внутри Flutter.
 4. Клики на интерактивные элементы в Flutter (например, тапы по лампочке или кондиционеру) шлют события обратно в консоль React, перебивая локальное состояние!
 `,
-    codeSnippet: `// 1. DART (Flutter) сторона: Экспонируем JS методы
+    codeSnippet: `// 1. DART (Flutter) сторона: Экспонируем JS bridge
+import 'dart:convert';
 import 'dart:js' as js;
 
-void main() {
-  // Регистрируем коллбек во внешней среде для React
-  js.context['reactToFlutterBridge'] = (String action, String data) {
-    if (action == 'update_temp') {
-      currentTemperature = double.parse(data);
-      triggerStateRedraw();
+void registerBridge(void Function(Map<String, dynamic>) applyState) {
+  js.context['reactToFlutterBridge'] = (String action, String payloadJson) {
+    final payload = jsonDecode(payloadJson) as Map<String, dynamic>;
+    if (action == 'sync_state') {
+      applyState(payload['state'] as Map<String, dynamic>);
     }
   };
-  
-  runApp(const SmartHomeApp());
 }
 
-// 2. REACT сторона: Дергаем метод у Flutter-раннера
-function changeTemperature(newVal) {
-  if (typeof window.reactToFlutterBridge === 'function') {
-    window.reactToFlutterBridge('update_temp', newVal.toString());
-  }
-}`,
+// 2. REACT сторона: синхронизация состояния хоста
+window.reactToFlutterBridge?.('sync_state', JSON.stringify({
+  demoType: 'smarthome',
+  state: { temperature: 24, brightness: 70 }
+}));`,
     codeLanguage: "typescript",
     demoType: "smarthome"
   },
@@ -121,7 +110,7 @@ function changeTemperature(newVal) {
 #### В этой демонстрации:
 * **React** посылает новые заказы и управляет фильтром («Apple», «Tesla», «Ethereum»).
 * **Flutter** принимает поток сырых тиков каждую миллисекунду, мгновенно отрисовывает свечные паттерны и сообщает React о пересечениях скользящих средних.
-* Интегрирован **Flutter DevTools Widget Inspector** — переключите вкладку для анализа дерева виджетов в реальном времени!
+* В консоль шины выводятся реальные события из Dart isolate: тики рынка, клики по свечам и торговые команды.
 `,
     codeSnippet: `// Пример отправки быстрых тиков из React в Flutter без ре-рендера React:
 const sendTickToRunner = (symbol, price) => {
@@ -215,8 +204,11 @@ function dispatchToFlutter(eventName, data) {
 3. **Общий контекст событий:** Всегда стройте обмен данными по шине событий с обратной связью (Acknowledge) для гарантии доставки состояний.
 `,
     codeSnippet: `// Продакшн-сборка Flutter-микрофронтенда для встраивания:
-// Использование флага для сужения бандла и CanvasKit рендерера
-flutter build web --release --web-renderer canvaskit --pwa-strategy=none`,
+cd flutter_apps
+../.flutter-sdk/bin/flutter build web --release \
+  --pwa-strategy=none \
+  --base-href=/flutter_embed/ \
+  -o ../public/flutter_embed`,
     codeLanguage: "bash",
     demoType: "none"
   }

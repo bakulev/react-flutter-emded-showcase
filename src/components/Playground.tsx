@@ -44,9 +44,8 @@ export default function Playground({
     setCustomPayload(JSON.stringify(payloadObj, null, 2));
   };
 
-  const jsCode = `// REACT (Host) -> Отправка вызова во Flutter OLE-холст
+  const jsCode = `// REACT (Host) -> Отправка вызова в настоящий Flutter Web runtime
 function sendOLEDocCommand(command, data) {
-  // Проверяем наличие забинженного Flutter метода в контексте window
   if (typeof window.reactToFlutterBridge === 'function') {
     window.reactToFlutterBridge(command, JSON.stringify(data));
     console.log("[React Host] Команда послана во Flutter:", command, data);
@@ -58,20 +57,23 @@ function sendOLEDocCommand(command, data) {
 // Вызов сброса физики частиц:
 sendOLEDocCommand('boost_particles', { count: 150 });`;
 
-  const dartCode = `// FLUTTER -> Регистрация и прослушка событий родительской веб-страницы
+  const dartCode = `// FLUTTER -> Регистрация и прослушка команд родительской веб-страницы
 import 'dart:js' as js;
 import 'dart:convert';
 
 void main() {
-  // Бинд функции во внешнюю JS среду
   js.context['reactToFlutterBridge'] = (String action, String jsonPayload) {
     var data = jsonDecode(jsonPayload);
     
-    // Перестраиваем состояние виджетов Flutter в зависимости от команды
     if (action == 'boost_particles') {
       int particlesCount = data['count'] ?? 100;
-      particleEngine.spawn(particlesCount);
+      setState(() => particleEngine.spawn(particlesCount));
     }
+
+    js.context.callMethod('flutterToReactBridge', [
+      'bridge_command_applied',
+      jsonEncode({'action': action})
+    ]);
   };
   
   runApp(const DynamicGenerativeApp());
