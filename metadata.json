@@ -1,0 +1,6 @@
+{
+  "name": "React-Flutter OLE Embed Demo",
+  "description": "Interactive web presentation showing dynamic embedding, OLE-like frame bridging, and bidirectional JS-Interop sync between React and live simulated Flutter applications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
