@@ -90,25 +90,25 @@ void main() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => loadPrebuiltEvent('adjust_thermostat', { celsius: 27, status: 'cooling' })}
-            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-750 transition-all font-mono"
+            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono"
           >
             🌡️ Установить климат 27°C
           </button>
           <button
             onClick={() => loadPrebuiltEvent('boost_particles', { count: 180, impulseForce: 5.5 })}
-            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-750 transition-all font-mono"
+            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono"
           >
             ✨ Генерировать 180 частиц
           </button>
           <button
             onClick={() => loadPrebuiltEvent('update_skin_color', { theme: 'neon', glowEnabled: true })}
-            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-750 transition-all font-mono"
+            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono"
           >
             🎨 Сменить скин на NEON
           </button>
           <button
             onClick={() => loadPrebuiltEvent('set_chart_ticker', { ticker: 'ETH', forceRefresh: true })}
-            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-750 transition-all font-mono"
+            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono"
           >
             📈 Переключить тикер на ETH
           </button>
@@ -160,7 +160,7 @@ void main() {
 
         {/* Right column: Reference Code block displaying actual implementation details */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col min-h-[220px]">
-          <div className="flex bg-slate-925 border-b border-slate-800 p-1.5 justify-between items-center px-3.5">
+          <div className="flex bg-slate-950 border-b border-slate-800 p-1.5 justify-between items-center px-3.5">
             <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
               <Code className="w-3.5 h-3.5 text-purple-400" />
               <span>Микрокод реализации OLE-моста</span>
@@ -196,7 +196,7 @@ void main() {
       </div>
 
       {/* Stability and Performance card metrics */}
-      <div className="bg-slate-900/40 border border-slate-850 p-3 rounded-lg grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+      <div className="bg-slate-900/40 border border-slate-800 p-3 rounded-lg grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
         <div className="flex flex-col gap-0.5">
           <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Пропускная способность</span>
           <span className="text-xs font-semibold text-sky-400 font-mono">10,000+ событий/сек</span>

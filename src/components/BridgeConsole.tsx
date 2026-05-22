@@ -18,7 +18,7 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
   }, [logs]);
 
   return (
-    <div className="bg-slate-925 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-full shadow-lg relative scanline">
+    <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-full shadow-lg relative scanline">
       {/* Console Header */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800">
         <div className="flex items-center gap-2">
@@ -32,7 +32,7 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
         </div>
         <button
           onClick={onClear}
-          className="text-slate-400 hover:text-rose-400 p-1 rounded hover:bg-slate-850 transition-all font-mono text-[10px] flex items-center gap-1"
+          className="text-slate-400 hover:text-rose-400 p-1 rounded hover:bg-slate-800 transition-all font-mono text-[10px] flex items-center gap-1"
           title="Очистить поток логов"
         >
           <Trash2 className="w-3.5 h-3.5" />

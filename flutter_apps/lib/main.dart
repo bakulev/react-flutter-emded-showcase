@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import 'js_bridge.dart';
 
@@ -49,6 +50,7 @@ class _EmbeddedFlutterSurfaceState extends State<EmbeddedFlutterSurface>
     with SingleTickerProviderStateMixin {
   final _random = math.Random();
   late final AnimationController _animationController;
+  late final SemanticsHandle _semanticsHandle;
   Timer? _marketTimer;
 
   String _demoType = 'none';
@@ -90,6 +92,7 @@ class _EmbeddedFlutterSurfaceState extends State<EmbeddedFlutterSurface>
   @override
   void initState() {
     super.initState();
+    _semanticsHandle = SemanticsBinding.instance.ensureSemantics();
     _particles = _spawnParticles(_particleCount);
     _animationController =
         AnimationController(vsync: this, duration: const Duration(seconds: 2))
@@ -112,6 +115,7 @@ class _EmbeddedFlutterSurfaceState extends State<EmbeddedFlutterSurface>
   @override
   void dispose() {
     _marketTimer?.cancel();
+    _semanticsHandle.dispose();
     _animationController.dispose();
     clearReactBridge();
     super.dispose();
@@ -134,10 +138,13 @@ class _EmbeddedFlutterSurfaceState extends State<EmbeddedFlutterSurface>
           } else {
             _applyHostState(payload);
           }
+          break;
         case 'select_demo':
           _demoType = _stringValue(payload['demoType'], _demoType);
+          break;
         case 'adjust_thermostat':
           _temperature = _intValue(payload['celsius'], _temperature);
+          break;
         case 'boost_particles':
           _particleCount = _intValue(
             payload['count'],
@@ -145,13 +152,17 @@ class _EmbeddedFlutterSurfaceState extends State<EmbeddedFlutterSurface>
           ).clamp(10, 220).toInt();
           _particles = _spawnParticles(_particleCount);
           _demoType = 'painter';
+          break;
         case 'update_skin_color':
           _appTheme = _stringValue(payload['theme'], _appTheme);
+          break;
         case 'set_chart_ticker':
           _setTicker(_stringValue(payload['ticker'], _ticker));
           _demoType = 'financial';
+          break;
         case 'reboot':
           _resetAllState();
+          break;
         default:
           _applyHostState(payload);
       }

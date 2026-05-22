@@ -21,6 +21,125 @@ import BridgeConsole from './BridgeConsole';
 import Playground from './Playground';
 import { BridgeLog } from '../types';
 
+function renderInlineMarkdown(text: string, keyPrefix: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const tokenPattern = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+  let lastIndex = 0;
+  let tokenIndex = 0;
+
+  for (const match of text.matchAll(tokenPattern)) {
+    if (match.index === undefined) continue;
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    const token = match[0];
+    if (token.startsWith('**')) {
+      parts.push(
+        <strong key={`${keyPrefix}-strong-${tokenIndex}`} className="font-semibold text-slate-100">
+          {token.slice(2, -2)}
+        </strong>
+      );
+    } else {
+      parts.push(
+        <code key={`${keyPrefix}-code-${tokenIndex}`} className="rounded bg-slate-900 px-1 py-0.5 font-mono text-[0.9em] text-sky-300">
+          {token.slice(1, -1)}
+        </code>
+      );
+    }
+
+    lastIndex = match.index + token.length;
+    tokenIndex += 1;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts;
+}
+
+function renderSlideMarkdown(markdown: string): React.ReactNode[] {
+  const nodes: React.ReactNode[] = [];
+  const lines = markdown.trim().split('\n');
+  let paragraphLines: string[] = [];
+  let listItems: string[] = [];
+  let listType: 'ol' | 'ul' | null = null;
+
+  const flushParagraph = () => {
+    if (paragraphLines.length === 0) return;
+    const text = paragraphLines.join(' ');
+    const key = `p-${nodes.length}`;
+    nodes.push(
+      <p key={key} className="text-slate-300 antialiased leading-relaxed">
+        {renderInlineMarkdown(text, key)}
+      </p>
+    );
+    paragraphLines = [];
+  };
+
+  const flushList = () => {
+    if (!listType || listItems.length === 0) return;
+    const key = `list-${nodes.length}`;
+    const ListTag = listType;
+    nodes.push(
+      <ListTag key={key} className={`${listType === 'ol' ? 'list-decimal' : 'list-disc'} pl-5 flex flex-col gap-1.5 text-slate-300 text-[13.5px] leading-relaxed`}>
+        {listItems.map((item, itemIndex) => (
+          <li key={`${key}-${itemIndex}`}>{renderInlineMarkdown(item, `${key}-${itemIndex}`)}</li>
+        ))}
+      </ListTag>
+    );
+    listItems = [];
+    listType = null;
+  };
+
+  lines.forEach((rawLine, lineIndex) => {
+    const line = rawLine.trim();
+
+    if (!line) {
+      flushParagraph();
+      flushList();
+      return;
+    }
+
+    const headingMatch = line.match(/^(#{3,6})\s+(.*)$/);
+    if (headingMatch) {
+      flushParagraph();
+      flushList();
+      const depth = headingMatch[1].length;
+      const text = headingMatch[2];
+      const key = `heading-${lineIndex}`;
+      nodes.push(
+        <h3 key={key} className={`${depth === 3 ? 'text-lg' : 'text-base'} font-bold text-slate-100 font-display tracking-tight mt-2 border-b border-slate-900 pb-1.5`}>
+          {renderInlineMarkdown(text, key)}
+        </h3>
+      );
+      return;
+    }
+
+    const orderedMatch = line.match(/^\d+\.\s+(.*)$/);
+    const unorderedMatch = line.match(/^[-*]\s+(.*)$/);
+    if (orderedMatch || unorderedMatch) {
+      flushParagraph();
+      const nextType = orderedMatch ? 'ol' : 'ul';
+      if (listType && listType !== nextType) {
+        flushList();
+      }
+      listType = nextType;
+      listItems.push((orderedMatch ?? unorderedMatch)![1]);
+      return;
+    }
+
+    flushList();
+    paragraphLines.push(line);
+  });
+
+  flushParagraph();
+  flushList();
+
+  return nodes;
+}
+
 export default function PresentationLayout() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
   const [logs, setLogs] = useState<BridgeLog[]>([]);
@@ -94,7 +213,11 @@ export default function PresentationLayout() {
 
   // Triggers dispatch from React controls down into Flutter
   const updateReactControlAndNotify = (key: string, value: any) => {
-    setReactState(prev => ({ ...prev, [key]: value }));
+    const nextState = { ...reactState, [key]: value };
+    setReactState(nextState);
+    if (typeof window.reactToFlutterBridge === 'function') {
+      window.reactToFlutterBridge('sync_state', JSON.stringify({ demoType: currentSlide.demoType, state: nextState }));
+    }
     dispatchBridgeLog('react', `command_to_flutter:${key}`, { value });
   };
 
@@ -141,7 +264,7 @@ export default function PresentationLayout() {
           </div>
           <button 
             onClick={() => {
-              setReactState({
+              const resetState = {
                 temperature: 21,
                 brightness: 65,
                 fanSpeed: 1,
@@ -152,10 +275,15 @@ export default function PresentationLayout() {
                 waveAmplitude: 35,
                 particleCount: 80,
                 frequency: 'mid'
-              });
+              } as const;
+              setReactState(resetState);
+              if (typeof window.reactToFlutterBridge === 'function') {
+                window.reactToFlutterBridge('reboot', JSON.stringify({ source: 'top_bar' }));
+                window.reactToFlutterBridge('sync_state', JSON.stringify({ demoType: currentSlide.demoType, state: resetState }));
+              }
               dispatchBridgeLog('react', 'bridge_connection_rebooted_force', { status: 'cleared_all' });
             }}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white px-3 py-1.5 rounded-lg font-mono text-xs text-slate-300 transition-all border border-slate-750"
+            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white px-3 py-1.5 rounded-lg font-mono text-xs text-slate-300 transition-all border border-slate-700"
             title="Перезагрузить все виджеты Flutter во фреймах"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -194,21 +322,7 @@ export default function PresentationLayout() {
 
             {/* Markdown Styled Description */}
             <div className="text-slate-300 text-sm leading-relaxed flex flex-col gap-4 font-sans select-text hover:text-slate-200">
-              {currentSlide.contentMarkdown.split('\n\n').map((para, i) => {
-                if (para.startsWith('###')) {
-                  return <h3 key={i} className="text-lg font-bold text-slate-100 font-display tracking-tight mt-2 border-b border-slate-900 pb-1.5">{para.replace('###', '').trim()}</h3>;
-                }
-                if (para.startsWith('* ') || para.startsWith('1. ') || para.startsWith('- ')) {
-                  return (
-                    <ul key={i} className="list-disc pl-5 flex flex-col gap-1.5 text-slate-355 text-[13.5px]">
-                      {para.split('\n').map((li, j) => (
-                        <li key={j}>{li.replace(/^[\s*-]+|^[\s*\d\.\s]+/, '').trim()}</li>
-                      ))}
-                    </ul>
-                  );
-                }
-                return <p key={i} className="text-slate-300 antialiased leading-relaxed">{para}</p>;
-              })}
+              {renderSlideMarkdown(currentSlide.contentMarkdown)}
             </div>
 
             {/* React Real-time Interface Side Controller Widget (Activates for demo slides only!) */}
@@ -216,7 +330,7 @@ export default function PresentationLayout() {
               <motion.div 
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-slate-900 border border-slate-850 rounded-xl p-5 mt-4 flex flex-col gap-4"
+                className="bg-slate-900 border border-slate-800 rounded-xl p-5 mt-4 flex flex-col gap-4"
               >
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
                   <span className="text-[11px] font-mono text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
@@ -274,7 +388,7 @@ export default function PresentationLayout() {
                             className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold transition-all ${
                               reactState.fanSpeed === speed 
                                 ? 'bg-sky-400 text-slate-950 scale-105 font-extrabold shadow-md' 
-                                : 'bg-slate-800 text-slate-400 hover:bg-slate-750'
+                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                             }`}
                           >
                             {speed}
@@ -314,7 +428,7 @@ export default function PresentationLayout() {
                             className={`py-1 rounded text-[10px] font-bold font-mono transition-all ${
                               reactState.ticker === t 
                                 ? 'bg-sky-500 text-slate-950 font-extrabold shadow' 
-                                : 'bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-slate-200'
+                                : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200'
                             }`}
                           >
                             {t}
@@ -414,8 +528,8 @@ export default function PresentationLayout() {
 
             {/* Static code preview block for presentation context */}
             {currentSlide.demoType === 'none' && (
-              <div className="bg-slate-900 border border-slate-850 rounded-xl overflow-hidden mt-4 flex flex-col">
-                <div className="bg-slate-925/80 border-b border-slate-800 py-2 px-4 flex items-center justify-between">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mt-4 flex flex-col">
+                <div className="bg-slate-950/80 border-b border-slate-800 py-2 px-4 flex items-center justify-between">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                     <FileCode2 className="w-3.5 h-3.5 text-sky-400" />
                     <span>Спецификация интеграционного интерфейса</span>
@@ -437,7 +551,7 @@ export default function PresentationLayout() {
               disabled={currentSlideIndex === 0}
               className={`flex items-center gap-1 px-4 py-2 border rounded-xl font-medium text-xs transition-all outline-none ${
                 currentSlideIndex === 0 
-                  ? 'border-slate-850 text-slate-650 cursor-not-allowed opacity-40' 
+                  ? 'border-slate-800 text-slate-600 cursor-not-allowed opacity-40'
                   : 'border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white hover:bg-slate-900/60'
               }`}
             >
@@ -480,7 +594,7 @@ export default function PresentationLayout() {
         </div>
 
         {/* Right Side: High-fidelity simulator panel & telemetry console logs */}
-        <div className="w-full xl:w-[52%] bg-slate-975 p-6 xl:p-8 flex flex-col gap-6 overflow-y-auto max-h-[85vh] xl:max-h-[calc(100vh-70px)] min-h-0">
+        <div className="w-full xl:w-[52%] bg-slate-950 p-6 xl:p-8 flex flex-col gap-6 overflow-y-auto max-h-[85vh] xl:max-h-[calc(100vh-70px)] min-h-0">
           
           <div className="flex-1 flex flex-col min-h-0 gap-6">
             
