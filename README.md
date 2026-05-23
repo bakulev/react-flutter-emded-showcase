@@ -106,6 +106,33 @@ cd flutter_apps
 ../.flutter-sdk/bin/flutter test
 ```
 
+## AWS Deployment
+
+The AWS deployment mirrors the static-site setup used by `asset-profecta-temporal-vehicle-demo`: a private S3 bucket, CloudFront distribution, Origin Access Control, bucket policy scoped to CloudFront, and a CloudFront invalidation after upload.
+
+```bash
+cp .env.example .env
+npm run deploy:aws
+```
+
+The deploy script runs `npm run lint`, rebuilds the Flutter Web bundle and Vite host into [dist](dist), provisions or updates the CloudFormation stack, syncs the generated static files to S3, and invalidates CloudFront.
+
+Useful overrides:
+
+```bash
+AWS_REGION=us-east-1 \
+STACK_NAME=react-flutter-emded-showcase \
+SITE_BUCKET_NAME=react-flutter-emded-showcase-854813112707-us-east-1 \
+npm run deploy:aws
+```
+
+`SITE_BUCKET_NAME` is optional. Leave it blank to let CloudFormation generate a globally unique bucket name.
+
+GitHub Actions validates the site on pushes to `main` and can deploy to AWS automatically or from a manual workflow run. Add these repository secrets before enabling the deploy job:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
 ## Bridge Contract
 
 React sends commands into Dart:

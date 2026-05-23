@@ -1,0 +1,100 @@
+name: Flutter Embed Site Preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_to_aws:
+        description: Deploy the static site to AWS after validation.
+        required: true
+        default: true
+        type: boolean
+      aws_region:
+        description: AWS region for CloudFormation and S3.
+        required: true
+        default: us-east-1
+      stack_name:
+        description: CloudFormation stack name for the static site.
+        required: true
+        default: react-flutter-emded-showcase
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  FLUTTER_BIN: flutter
+
+jobs:
+  validate-site:
+    name: Validate static site
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Enable Flutter web
+        run: flutter config --enable-web
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check React host
+        run: npm run lint
+
+      - name: Build Flutter embed and host
+        run: npm run build
+
+  deploy-aws:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: validate-site
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_to_aws == 'true')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Enable Flutter web
+        run: flutter config --enable-web
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.aws_region || 'us-east-1' }}
+
+      - name: Deploy static site
+        env:
+          AWS_REGION: ${{ github.event.inputs.aws_region || 'us-east-1' }}
+          STACK_NAME: ${{ github.event.inputs.stack_name || 'react-flutter-emded-showcase' }}
+        run: npm run deploy:aws

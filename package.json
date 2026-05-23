@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build:flutter": "cd flutter_apps && ../.flutter-sdk/bin/flutter build web --release --pwa-strategy=none --base-href=/flutter_embed/ -o ../public/flutter_embed",
+    "build:flutter": "cd flutter_apps && ${FLUTTER_BIN:-../.flutter-sdk/bin/flutter} build web --release --pwa-strategy=none --base-href=/flutter_embed/ -o ../public/flutter_embed",
     "build": "npm run build:flutter && vite build",
+    "deploy:aws": "bash tools/deploy-static-site.sh",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js public/flutter_embed flutter_apps/build",
     "lint": "tsc --noEmit"
