@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Sliders, Play, Zap, Terminal, Code, Radio, RefreshCw, Cpu } from 'lucide-react';
-import { BridgeLog } from '../types';
+import { Code, Palette, Play, Sliders, Sparkles, Thermometer, TrendingUp } from 'lucide-react';
+import { DEFAULT_FLUTTER_INSTANCE_ID } from '../bridgeProtocol';
 
 interface PlaygroundProps {
   onDispatchCustomEvent: (eventName: string, payload: Record<string, any>) => void;
@@ -44,39 +44,33 @@ export default function Playground({
     setCustomPayload(JSON.stringify(payloadObj, null, 2));
   };
 
-  const jsCode = `// REACT (Host) -> Отправка вызова в настоящий Flutter Web runtime
-function sendOLEDocCommand(command, data) {
-  if (typeof window.reactToFlutterBridge === 'function') {
-    window.reactToFlutterBridge(command, JSON.stringify(data));
-    console.log("[React Host] Команда послана во Flutter:", command, data);
-  } else {
-    console.warn("Движок Flutter еще загружается...");
-  }
+  const jsCode = `// REACT (Host) -> отправка команды в конкретный Flutter instance
+import { dispatchToEmbeddedFlutter } from './bridgeProtocol';
+
+function sendFlutterCommand(type, payload) {
+  const delivered = dispatchToEmbeddedFlutter(type, payload, '${DEFAULT_FLUTTER_INSTANCE_ID}');
+  console.log('[React Host] bridge delivery:', { type, delivered });
 }
 
-// Вызов сброса физики частиц:
-sendOLEDocCommand('boost_particles', { count: 150 });`;
+sendFlutterCommand('boost_particles', { count: 150 });`;
 
-  const dartCode = `// FLUTTER -> Регистрация и прослушка команд родительской веб-страницы
-import 'dart:js' as js;
+  const dartCode = `// FLUTTER -> namespaced bridge через dart:js_interop
 import 'dart:convert';
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
-void main() {
-  js.context['reactToFlutterBridge'] = (String action, String jsonPayload) {
-    var data = jsonDecode(jsonPayload);
-    
-    if (action == 'boost_particles') {
-      int particlesCount = data['count'] ?? 100;
-      setState(() => particleEngine.spawn(particlesCount));
-    }
+void registerReactBridge(void Function(String, String) handler) {
+  final callback = ((JSString envelopeJson) {
+    final envelope = jsonDecode(envelopeJson.toDart) as Map<String, Object?>;
+    final payload = envelope['payload'] as Map<String, Object?>? ?? {};
+    handler(envelope['type'].toString(), jsonEncode(payload));
+  }).toJS;
 
-    js.context.callMethod('flutterToReactBridge', [
-      'bridge_command_applied',
-      jsonEncode({'action': action})
-    ]);
-  };
-  
-  runApp(const DynamicGenerativeApp());
+  final namespace = globalContext['__reactFlutterEmbeds'] as JSObject;
+  final instanceId = namespace['activeInstanceId'] as JSString;
+  final instances = namespace['instances'] as JSObject;
+  final instance = instances[instanceId.toDart] as JSObject;
+  instance['reactToFlutter'] = callback;
 }`;
 
   return (
@@ -88,30 +82,34 @@ void main() {
           Шаблоны тестовых сигналов (Prebuilt Signal Triggers)
         </span>
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => loadPrebuiltEvent('adjust_thermostat', { celsius: 27, status: 'cooling' })}
-            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono"
-          >
-            🌡️ Установить климат 27°C
-          </button>
-          <button
-            onClick={() => loadPrebuiltEvent('boost_particles', { count: 180, impulseForce: 5.5 })}
-            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono"
-          >
-            ✨ Генерировать 180 частиц
-          </button>
-          <button
-            onClick={() => loadPrebuiltEvent('update_skin_color', { theme: 'neon', glowEnabled: true })}
-            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono"
-          >
-            🎨 Сменить скин на NEON
-          </button>
-          <button
-            onClick={() => loadPrebuiltEvent('set_chart_ticker', { ticker: 'ETH', forceRefresh: true })}
-            className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono"
-          >
-            📈 Переключить тикер на ETH
-          </button>
+            <button
+              onClick={() => loadPrebuiltEvent('adjust_thermostat', { celsius: 27, status: 'cooling' })}
+              className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono flex items-center gap-1.5"
+            >
+              <Thermometer className="w-3 h-3" />
+              <span>Установить климат 27°C</span>
+            </button>
+            <button
+              onClick={() => loadPrebuiltEvent('boost_particles', { count: 180, impulseForce: 5.5 })}
+              className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>Генерировать 180 частиц</span>
+            </button>
+            <button
+              onClick={() => loadPrebuiltEvent('update_skin_color', { theme: 'neon', glowEnabled: true })}
+              className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono flex items-center gap-1.5"
+            >
+              <Palette className="w-3 h-3" />
+              <span>Сменить скин на NEON</span>
+            </button>
+            <button
+              onClick={() => loadPrebuiltEvent('set_chart_ticker', { ticker: 'ETH', forceRefresh: true })}
+              className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono flex items-center gap-1.5"
+            >
+              <TrendingUp className="w-3 h-3" />
+              <span>Переключить тикер на ETH</span>
+            </button>
         </div>
       </div>
 
@@ -127,7 +125,7 @@ void main() {
             </h4>
             
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-slate-400 font-mono font-semibold">Имя CustomEvent (Action Key)</label>
+              <label className="text-[10px] text-slate-400 font-mono font-semibold">Тип команды bridge envelope</label>
               <input
                 type="text"
                 value={customEventName}
@@ -163,7 +161,7 @@ void main() {
           <div className="flex bg-slate-950 border-b border-slate-800 p-1.5 justify-between items-center px-3.5">
             <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
               <Code className="w-3.5 h-3.5 text-purple-400" />
-              <span>Микрокод реализации OLE-моста</span>
+              <span>Микрокод реализации instance bridge</span>
             </span>
             <div className="flex gap-1">
               <button
@@ -198,20 +196,20 @@ void main() {
       {/* Stability and Performance card metrics */}
       <div className="bg-slate-900/40 border border-slate-800 p-3 rounded-lg grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Пропускная способность</span>
-          <span className="text-xs font-semibold text-sky-400 font-mono">10,000+ событий/сек</span>
+          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Доставка</span>
+          <span className="text-xs font-semibold text-sky-400 font-mono">JS call + JSON</span>
         </div>
         <div className="flex flex-col gap-0.5 border-l border-slate-800/60">
-          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Затраты на фрейм</span>
-          <span className="text-xs font-semibold text-emerald-400 font-mono">&lt; 0.04 ms</span>
+          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Протокол</span>
+          <span className="text-xs font-semibold text-emerald-400 font-mono">Envelope v1</span>
         </div>
         <div className="flex flex-col gap-0.5 border-l border-slate-800/60">
-          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Утечка ОЗУ</span>
-          <span className="text-xs font-semibold text-indigo-400 font-mono">0.00% (Isolated Heap)</span>
+          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Lifecycle</span>
+          <span className="text-xs font-semibold text-indigo-400 font-mono">ready/error/dispose</span>
         </div>
         <div className="flex flex-col gap-0.5 border-l border-slate-800/60">
-          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Ширина канала</span>
-          <span className="text-xs font-semibold text-emerald-400 font-mono">Direct Memory Sync</span>
+          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Namespace</span>
+          <span className="text-xs font-semibold text-emerald-400 font-mono">per instance</span>
         </div>
       </div>
     </div>

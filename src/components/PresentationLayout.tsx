@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -20,6 +20,7 @@ import FlutterHost from './FlutterHost';
 import BridgeConsole from './BridgeConsole';
 import Playground from './Playground';
 import { BridgeLog } from '../types';
+import { dispatchToEmbeddedFlutter } from '../bridgeProtocol';
 
 function renderInlineMarkdown(text: string, keyPrefix: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
@@ -160,28 +161,6 @@ export default function PresentationLayout() {
 
   const currentSlide = slides[currentSlideIndex];
 
-  // Simulated live market price ticks updater for financial view
-  useEffect(() => {
-    if (currentSlide.demoType !== 'financial') return;
-
-    let tickRate = 2000;
-    if (reactState.frequency === 'high') tickRate = 500;
-    if (reactState.frequency === 'low') tickRate = 5000;
-
-    const interval = setInterval(() => {
-      const priceDrift = (Math.random() - 0.49) * 2.5;
-      
-      // Post event through the simulated bridge
-      dispatchBridgeLog('flutter', 'live_ticker_tick', {
-        ticker: reactState.ticker,
-        priceDelta: priceDrift.toFixed(2),
-        signalStrength: 'excellent'
-      });
-    }, tickRate);
-
-    return () => clearInterval(interval);
-  }, [currentSlideIndex, reactState.ticker, reactState.frequency]);
-
   const dispatchBridgeLog = (sender: 'react' | 'flutter', event: string, payload: Record<string, any>) => {
     const newLog: BridgeLog = {
       id: Math.random().toString(36).substring(2, 9),
@@ -215,10 +194,8 @@ export default function PresentationLayout() {
   const updateReactControlAndNotify = (key: string, value: any) => {
     const nextState = { ...reactState, [key]: value };
     setReactState(nextState);
-    if (typeof window.reactToFlutterBridge === 'function') {
-      window.reactToFlutterBridge('sync_state', JSON.stringify({ demoType: currentSlide.demoType, state: nextState }));
-    }
-    dispatchBridgeLog('react', `command_to_flutter:${key}`, { value });
+    const delivered = dispatchToEmbeddedFlutter('sync_state', { demoType: currentSlide.demoType, state: nextState });
+    dispatchBridgeLog('react', `command_to_flutter:${key}`, { value, delivered });
   };
 
   // When Flutter app modifies internal state via clicking widgets
@@ -247,8 +224,8 @@ export default function PresentationLayout() {
             <Layers className="w-5 h-5 text-slate-950 font-bold" />
           </div>
           <div>
-            <h1 className="text-sm font-display font-bold tracking-wider text-slate-100 uppercase">React-Flutter OLE Embed Showcase</h1>
-            <p className="text-[10px] text-slate-400 font-mono">ТЕХНОЛОГИЯ БЕШОВНОГО ВСТРАИВАНИЯ • JS-INTEROP BRIDGE ENGINE</p>
+            <h1 className="text-sm font-display font-bold tracking-wider text-slate-100 uppercase">React-Flutter Embedded Runtime Showcase</h1>
+            <p className="text-[10px] text-slate-400 font-mono">HOST-ELEMENT EMBEDDING • VERSIONED JSON BRIDGE</p>
           </div>
         </div>
 
@@ -277,11 +254,9 @@ export default function PresentationLayout() {
                 frequency: 'mid'
               } as const;
               setReactState(resetState);
-              if (typeof window.reactToFlutterBridge === 'function') {
-                window.reactToFlutterBridge('reboot', JSON.stringify({ source: 'top_bar' }));
-                window.reactToFlutterBridge('sync_state', JSON.stringify({ demoType: currentSlide.demoType, state: resetState }));
-              }
-              dispatchBridgeLog('react', 'bridge_connection_rebooted_force', { status: 'cleared_all' });
+              const rebootDelivered = dispatchToEmbeddedFlutter('reboot', { source: 'top_bar' });
+              const syncDelivered = dispatchToEmbeddedFlutter('sync_state', { demoType: currentSlide.demoType, state: resetState });
+              dispatchBridgeLog('react', 'bridge_connection_rebooted', { rebootDelivered, syncDelivered });
             }}
             className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white px-3 py-1.5 rounded-lg font-mono text-xs text-slate-300 transition-all border border-slate-700"
             title="Перезагрузить все виджеты Flutter во фреймах"
@@ -335,12 +310,12 @@ export default function PresentationLayout() {
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
                   <span className="text-[11px] font-mono text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <Sliders className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
-                    <span>Управление хостом React (OLE Client Controller)</span>
+                    <span>Управление хостом React (Instance Bridge)</span>
                   </span>
                   <span className="text-[9px] bg-sky-950 text-sky-300 font-mono px-2 py-0.5 rounded-full border border-sky-900/30">Active Link</span>
                 </div>
 
-                {/* Sub controls depending on active simulation demo */}
+                {/* Sub controls depending on active embedded demo */}
                 {currentSlide.demoType === 'smarthome' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Temperature slider on React Side */}
@@ -603,7 +578,7 @@ export default function PresentationLayout() {
                 <div className="flex items-center gap-2">
                   <Tv className="w-4 h-4 text-sky-400" />
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                    Активное окно внедрения OLE 2.0 (Real Flutter Web Embed)
+                    Активное окно внедрения (Real Flutter Web Embed)
                   </span>
                 </div>
                 {currentSlide.demoType === 'none' && (
@@ -633,10 +608,8 @@ export default function PresentationLayout() {
                 <div className="flex-1 min-h-0 relative">
                   <Playground
                     onDispatchCustomEvent={(name, payload) => {
-                      dispatchBridgeLog('react', name, payload);
-                      if (typeof window.reactToFlutterBridge === 'function') {
-                        window.reactToFlutterBridge(name, JSON.stringify(payload));
-                      }
+                      const delivered = dispatchToEmbeddedFlutter(name, payload);
+                      dispatchBridgeLog('react', name, { ...payload, delivered });
                     }}
                     onClearLogs={handleClearLogs}
                     reactState={reactState}

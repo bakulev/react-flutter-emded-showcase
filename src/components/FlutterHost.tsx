@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Cpu, Radio, RefreshCw } from 'lucide-react';
 import { BridgeLog } from '../types';
+import {
+  DEFAULT_FLUTTER_INSTANCE_ID,
+  createBridgeEnvelope,
+  ensureFlutterBridgeInstance,
+  getFlutterBridgeInstance,
+  parseBridgeEnvelope,
+} from '../bridgeProtocol';
 
 interface FlutterHostProps {
   demoType: 'smarthome' | 'financial' | 'painter' | 'playground' | 'none';
@@ -26,17 +33,16 @@ declare global {
   interface Window {
     runEmbeddedFlutter?: (options: {
       hostElement: HTMLElement;
+      instanceId?: string;
       assetBase?: string;
       renderer?: 'canvaskit' | 'skwasm';
     }) => Promise<unknown>;
-    reactToFlutterBridge?: (action: string, payloadJson: string) => void;
-    flutterToReactBridge?: (event: string, payloadJson: string) => void;
-    embeddedFlutterBridgeReady?: boolean;
     __embeddedFlutterBootstrapPromise?: Promise<void>;
   }
 }
 
 const FLUTTER_ASSET_BASE = '/flutter_embed/';
+const FLUTTER_INSTANCE_ID = DEFAULT_FLUTTER_INSTANCE_ID;
 const HOST_STATE_KEYS = [
   'temperature',
   'brightness',
@@ -79,15 +85,6 @@ function loadFlutterBootstrap(): Promise<void> {
   return window.__embeddedFlutterBootstrapPromise;
 }
 
-function parseFlutterPayload(payloadJson: string): Record<string, any> {
-  try {
-    const parsed = JSON.parse(payloadJson);
-    return parsed && typeof parsed === 'object' ? parsed : { value: parsed };
-  } catch {
-    return { raw: payloadJson };
-  }
-}
-
 function extractStatePatch(payload: Record<string, any>): Record<string, any> {
   return HOST_STATE_KEYS.reduce<Record<string, any>>((patch, key) => {
     if (Object.prototype.hasOwnProperty.call(payload, key)) {
@@ -114,19 +111,29 @@ export default function FlutterHost({
   latestPayloadRef.current = { demoType, reactState };
   callbacksRef.current = { onFlutterStateChange, onDispatchLog };
 
-  const sendToFlutter = useCallback((action: string, payload: Record<string, any>, log = false) => {
-    if (typeof window.reactToFlutterBridge !== 'function') {
+  const sendToFlutter = useCallback((type: string, payload: Record<string, any> = {}, log = false) => {
+    const instance = getFlutterBridgeInstance(FLUTTER_INSTANCE_ID);
+    if (typeof instance?.reactToFlutter !== 'function') {
       return false;
     }
 
-    window.reactToFlutterBridge(action, JSON.stringify(payload));
-    setLastBridgeAt(new Date().toLocaleTimeString());
+    const envelope = createBridgeEnvelope(FLUTTER_INSTANCE_ID, type, payload);
+    instance.lastCommandAt = envelope.createdAt;
+    instance.reactToFlutter(JSON.stringify(envelope));
+    setLastBridgeAt(new Date(envelope.createdAt).toLocaleTimeString());
 
     if (log) {
       callbacksRef.current.onDispatchLog({
         sender: 'react',
-        event: `bridge:${action}`,
-        payload,
+        event: `bridge:${type}`,
+        payload: {
+          ...payload,
+          _bridge: {
+            version: envelope.version,
+            requestId: envelope.requestId,
+            instanceId: envelope.instanceId,
+          },
+        },
       });
     }
 
@@ -135,14 +142,60 @@ export default function FlutterHost({
 
   useEffect(() => {
     let cancelled = false;
+    const bridgeInstance = ensureFlutterBridgeInstance(FLUTTER_INSTANCE_ID);
 
-    window.flutterToReactBridge = (event, payloadJson) => {
-      const payload = parseFlutterPayload(payloadJson);
-      callbacksRef.current.onDispatchLog({ sender: 'flutter', event, payload });
+    const handleFlutterEnvelope = (envelopeJson: string) => {
+      const envelope = parseBridgeEnvelope(envelopeJson);
+      if (!envelope) {
+        callbacksRef.current.onDispatchLog({
+          sender: 'flutter',
+          event: 'protocol_error',
+          payload: { message: 'Invalid bridge envelope received from Flutter.' },
+        });
+        return;
+      }
+
+      const payload = envelope.payload;
+      const instance = getFlutterBridgeInstance(envelope.instanceId);
+
+      if (instance) {
+        instance.lastEventAt = envelope.createdAt;
+        if (envelope.type === 'engine_initialized') {
+          instance.status = 'running';
+        }
+      }
+
+      callbacksRef.current.onDispatchLog({
+        sender: 'flutter',
+        event: envelope.type,
+        payload: {
+          ...payload,
+          _bridge: {
+            version: envelope.version,
+            requestId: envelope.requestId,
+            instanceId: envelope.instanceId,
+          },
+        },
+      });
 
       const patch = extractStatePatch(payload);
       if (Object.keys(patch).length > 0) {
         callbacksRef.current.onFlutterStateChange(patch);
+      }
+    };
+
+    bridgeInstance.status = 'booting';
+    bridgeInstance.hostElementId = 'flutter_host_webassembly_element';
+    bridgeInstance.assetBase = FLUTTER_ASSET_BASE;
+    bridgeInstance.renderer = 'canvaskit';
+    bridgeInstance.receiveFromFlutter = handleFlutterEnvelope;
+    bridgeInstance.sendToFlutter = (type, payload = {}) => sendToFlutter(type, payload);
+    bridgeInstance.dispose = () => {
+      bridgeInstance.status = 'disposed';
+      delete bridgeInstance.sendToFlutter;
+      delete bridgeInstance.receiveFromFlutter;
+      if (window.__reactFlutterEmbeds?.activeInstanceId === FLUTTER_INSTANCE_ID) {
+        delete window.__reactFlutterEmbeds.activeInstanceId;
       }
     };
 
@@ -163,6 +216,7 @@ export default function FlutterHost({
 
         await window.runEmbeddedFlutter({
           hostElement,
+          instanceId: FLUTTER_INSTANCE_ID,
           assetBase: FLUTTER_ASSET_BASE,
           renderer: 'canvaskit',
         });
@@ -171,14 +225,16 @@ export default function FlutterHost({
           return;
         }
 
+        bridgeInstance.status = 'running';
         setEngineStatus('running');
         callbacksRef.current.onDispatchLog({
           sender: 'flutter',
-          event: 'engine_initialized',
+          event: 'host_engine_attached',
           payload: {
             runtime: 'Flutter Web',
             renderer: 'CanvasKit',
-            hostElement: 'flutter_host_webassembly_element',
+            hostElement: bridgeInstance.hostElementId,
+            instanceId: FLUTTER_INSTANCE_ID,
           },
         });
       } catch (error) {
@@ -186,7 +242,10 @@ export default function FlutterHost({
           return;
         }
         setEngineStatus('failed');
-        setLoadError(error instanceof Error ? error.message : String(error));
+        const message = error instanceof Error ? error.message : String(error);
+        bridgeInstance.status = 'failed';
+        bridgeInstance.error = message;
+        setLoadError(message);
       }
     };
 
@@ -194,8 +253,9 @@ export default function FlutterHost({
 
     return () => {
       cancelled = true;
+      bridgeInstance.dispose?.();
     };
-  }, []);
+  }, [sendToFlutter]);
 
   useEffect(() => {
     if (engineStatus !== 'running') {
@@ -208,12 +268,15 @@ export default function FlutterHost({
 
     const payload = latestPayloadRef.current;
     lastSyncedDemoRef.current = demoType;
-    sendToFlutter('sync_state', payload);
+    sendToFlutter('sync_state', {
+      demoType: payload.demoType,
+      state: payload.reactState,
+    });
   }, [engineStatus, demoType, reactState, sendToFlutter]);
 
   const handleReboot = () => {
-    sendToFlutter('reboot', {}, true);
-    sendToFlutter('sync_state', { demoType, reactState });
+    sendToFlutter('reboot', { source: 'host_frame' }, true);
+    sendToFlutter('sync_state', { demoType, state: reactState });
   };
 
   return (
@@ -281,7 +344,7 @@ export default function FlutterHost({
       <div className="px-4 py-2 border-t border-slate-900/80 flex items-center justify-between text-[9px] text-slate-400 font-mono bg-slate-950 select-none">
         <span className="flex items-center gap-1.5 text-slate-500">
           <Radio className="w-3 h-3 text-sky-400" />
-          Bridge: window.reactToFlutterBridge
+          Bridge: __reactFlutterEmbeds[{FLUTTER_INSTANCE_ID}]
         </span>
         <span>Last sync: {lastBridgeAt}</span>
       </div>

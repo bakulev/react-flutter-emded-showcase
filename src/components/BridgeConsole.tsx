@@ -10,7 +10,7 @@ interface BridgeConsoleProps {
 export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
   const consoleEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto scroll down on new OLE logs
+  // Auto scroll down on new bridge logs.
   useEffect(() => {
     if (consoleEndRef.current) {
       consoleEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -24,7 +24,7 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-sky-400" />
           <span className="font-mono text-xs font-bold text-slate-200 uppercase tracking-widest">
-            Консоль шины данных (OLE Bridge Logs)
+            Консоль шины данных (Bridge Logs)
           </span>
           <span className="text-[10px] bg-sky-950 text-sky-300 font-mono px-1.5 py-0.5 rounded border border-sky-900/30">
             {logs.length} соб.
@@ -45,7 +45,7 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
         {logs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-slate-500 text-center gap-2">
             <Radio className="w-6 h-6 text-slate-600 animate-pulse" />
-            <p className="max-w-xs font-sans">Шина интерактивного обмена OLE пуста. Сделайте клик или измените ползунок, чтобы родить первое событие!</p>
+            <p className="max-w-xs font-sans">Шина обмена пока пуста. Сделайте клик или измените ползунок, чтобы увидеть первый envelope.</p>
           </div>
         ) : (
           logs.map((log) => {
@@ -75,7 +75,9 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
                     <ArrowRightLeft className="w-3 h-3 text-slate-600" />
                     <span className="font-semibold text-slate-350">{log.event}</span>
                   </div>
-                  <span className="text-[9px] text-slate-500">Latency: &lt; 0.5ms</span>
+                  <span className="text-[9px] text-slate-500">
+                    {typeof log.payload._bridge?.requestId === 'string' ? `req ${log.payload._bridge.requestId.slice(-6)}` : 'local'}
+                  </span>
                 </div>
 
                 {/* Log Payload */}
@@ -89,13 +91,13 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
         <div ref={consoleEndRef} />
       </div>
 
-      {/* OLE Interop help line at the bottom */}
+      {/* Interop help line at the bottom */}
       <div className="px-4 py-2 bg-slate-900 border-t border-slate-800 text-[10px] text-slate-500 flex items-center gap-1 font-sans justify-between">
         <div className="flex items-center gap-1">
           <HelpCircle className="w-3 h-3 text-slate-400" />
-          <span>Сценарий OLE работает через JS Interop: Flutter биндится в глобальное окно window и подписывается на CustomEvents.</span>
+          <span>Flutter и React обмениваются versioned JSON envelopes через namespaced JS Interop instance.</span>
         </div>
-        <span className="text-[9px] font-mono text-slate-400">Memory: 0 references leaked</span>
+        <span className="text-[9px] font-mono text-slate-400">Protocol: v1</span>
       </div>
     </div>
   );

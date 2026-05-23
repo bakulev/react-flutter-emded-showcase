@@ -107,7 +107,7 @@ class _EmbeddedFlutterSurfaceState extends State<EmbeddedFlutterSurface>
       _emit('engine_initialized', {
         'renderer': 'CanvasKit',
         'runtime': 'Flutter Web 3.44 / Dart 3.12',
-        'bridge': 'window.reactToFlutterBridge',
+        'bridge': 'window.__reactFlutterEmbeds.instances[instanceId]',
       });
     });
   }
@@ -1124,7 +1124,7 @@ class _BridgePlaygroundView extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           _MetricLine(
-            label: 'window.reactToFlutterBridge',
+            label: 'bridge instance',
             value: 'registered',
             color: const Color(0xFF34D399),
             foreground: foreground,

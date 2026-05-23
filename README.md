@@ -14,8 +14,8 @@ The project started as a visual demo of Flutter-like widgets, but now the right-
 
 - Real Flutter Web embedded in React without an iframe.
 - CanvasKit rendering inside a host DOM element controlled by React.
-- React to Flutter commands through `window.reactToFlutterBridge(action, payloadJson)`.
-- Flutter to React events through `window.flutterToReactBridge(event, payloadJson)`.
+- React to Flutter commands through a namespaced instance bridge at `window.__reactFlutterEmbeds.instances[instanceId]`.
+- Flutter to React events through versioned JSON envelopes: `{ type, version, requestId, instanceId, payload }`.
 - Shared state synchronization for smart home controls, financial ticker updates, particle demos, and custom playground commands.
 - A reboot flow that resets the Dart side and then resynchronizes host state.
 - Flutter Web semantics enabled so browser/manual interaction tools can see embedded controls.
@@ -28,18 +28,18 @@ React / Vite host
    src/components/FlutterHost.tsx
    src/components/BridgeConsole.tsx
                |
-               | window.reactToFlutterBridge(action, payloadJson)
+               | instance.reactToFlutter(envelopeJson)
                v
 Flutter Web bundle
    flutter_apps/lib/main.dart
    flutter_apps/lib/js_bridge_web.dart
                |
-               | window.flutterToReactBridge(event, payloadJson)
+               | instance.receiveFromFlutter(envelopeJson)
                v
 React bridge console and host state
 ```
 
-`FlutterHost` loads [public/flutter_embed/flutter_bootstrap.js](public/flutter_embed/flutter_bootstrap.js), calls `window.runEmbeddedFlutter(...)`, and passes a host element to the Flutter loader. The generated Flutter runtime creates a real `<flutter-view>` inside that host element and uses CanvasKit assets from [public/flutter_embed/canvaskit](public/flutter_embed/canvaskit).
+`FlutterHost` loads [public/flutter_embed/flutter_bootstrap.js](public/flutter_embed/flutter_bootstrap.js), registers an instance in `window.__reactFlutterEmbeds`, calls `window.runEmbeddedFlutter(...)`, and passes a host element to the Flutter loader. The generated Flutter runtime creates a real `<flutter-view>` inside that host element and uses CanvasKit assets from [public/flutter_embed/canvaskit](public/flutter_embed/canvaskit).
 
 ## Project Structure
 
@@ -111,13 +111,10 @@ cd flutter_apps
 React sends commands into Dart:
 
 ```ts
-window.reactToFlutterBridge?.(
-   'sync_state',
-   JSON.stringify({
-      demoType: 'smarthome',
-      state: { temperature: 21, brightness: 65, fanSpeed: 2 }
-   })
-);
+dispatchToEmbeddedFlutter('sync_state', {
+   demoType: 'smarthome',
+   state: { temperature: 21, brightness: 65, fanSpeed: 2 }
+});
 ```
 
 Flutter emits events back to React:
@@ -125,11 +122,13 @@ Flutter emits events back to React:
 ```dart
 emitToReact('widget_state_changed', {
    'widget': 'lock',
-   'patch': {'lockStatus': 'LOCKED'}
+   'securityLocked': true
 });
 ```
 
-The bridge is intentionally JSON-based so the message boundary is explicit and easy to inspect in the console. The app logs every important command, acknowledgement, state patch, and live ticker event in the React bridge console.
+The bridge is intentionally JSON-based so the message boundary is explicit and easy to inspect in the console. Every command and event is wrapped in an envelope with `version`, `requestId`, `instanceId`, and `payload`. The app logs important commands, acknowledgements, state patches, and live ticker events in the React bridge console.
+
+There is no global bridge fallback. Commands and events must go through the instance namespace. This showcase still runs one Flutter Web engine; the namespace makes that constraint explicit instead of pretending multi-engine embedding is already solved.
 
 ## Key Files
 
