@@ -12,9 +12,8 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
 
   // Auto scroll down on new bridge logs.
   useEffect(() => {
-    if (consoleEndRef.current) {
-      consoleEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    const container = consoleEndRef.current?.parentElement;
+    container?.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
   }, [logs]);
 
   return (
@@ -24,16 +23,16 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-sky-400" />
           <span className="font-mono text-xs font-bold text-slate-200 uppercase tracking-widest">
-            Консоль шины данных (Bridge Logs)
+            Bridge logs
           </span>
           <span className="text-[10px] bg-sky-950 text-sky-300 font-mono px-1.5 py-0.5 rounded border border-sky-900/30">
-            {logs.length} соб.
+            {logs.length} events
           </span>
         </div>
         <button
           onClick={onClear}
           className="text-slate-400 hover:text-rose-400 p-1 rounded hover:bg-slate-800 transition-all font-mono text-[10px] flex items-center gap-1"
-          title="Очистить поток логов"
+          title="Clear bridge logs"
         >
           <Trash2 className="w-3.5 h-3.5" />
           <span>Clear logs</span>
@@ -45,7 +44,7 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
         {logs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-slate-500 text-center gap-2">
             <Radio className="w-6 h-6 text-slate-600 animate-pulse" />
-            <p className="max-w-xs font-sans">Шина обмена пока пуста. Сделайте клик или измените ползунок, чтобы увидеть первый envelope.</p>
+            <p className="max-w-xs font-sans">No messages yet. Click a control or move a slider to see the first message envelope.</p>
           </div>
         ) : (
           logs.map((log) => {
@@ -95,7 +94,7 @@ export default function BridgeConsole({ logs, onClear }: BridgeConsoleProps) {
       <div className="px-4 py-2 bg-slate-900 border-t border-slate-800 text-[10px] text-slate-500 flex items-center gap-1 font-sans justify-between">
         <div className="flex items-center gap-1">
           <HelpCircle className="w-3 h-3 text-slate-400" />
-          <span>Flutter и React обмениваются versioned JSON envelopes через namespaced JS Interop instance.</span>
+          <span>Flutter and React exchange versioned JSON envelopes through a namespaced JS interop instance.</span>
         </div>
         <span className="text-[9px] font-mono text-slate-400">Protocol: v1</span>
       </div>

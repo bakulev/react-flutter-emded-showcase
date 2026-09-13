@@ -35,7 +35,7 @@ export default function Playground({
         setReactState({ ...reactState, ticker: parsed.ticker });
       }
     } catch (e) {
-      alert('Ошибка парсинга JSON! Пожалуйста, проверьте синтаксис payload.');
+      alert('Invalid JSON. Please check the payload syntax.');
     }
   };
 
@@ -44,7 +44,7 @@ export default function Playground({
     setCustomPayload(JSON.stringify(payloadObj, null, 2));
   };
 
-  const jsCode = `// REACT (Host) -> отправка команды в конкретный Flutter instance
+  const jsCode = `// REACT (Host) -> send a command to a specific Flutter instance
 import { dispatchToEmbeddedFlutter } from './bridgeProtocol';
 
 function sendFlutterCommand(type, payload) {
@@ -54,7 +54,7 @@ function sendFlutterCommand(type, payload) {
 
 sendFlutterCommand('boost_particles', { count: 150 });`;
 
-  const dartCode = `// FLUTTER -> namespaced bridge через dart:js_interop
+  const dartCode = `// FLUTTER -> namespaced bridge using dart:js_interop
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
@@ -79,7 +79,7 @@ void registerReactBridge(void Function(String, String) handler) {
       {/* Selector Prebuilts */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex flex-col gap-2">
         <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block font-mono">
-          Шаблоны тестовых сигналов (Prebuilt Signal Triggers)
+          Prebuilt test commands
         </span>
         <div className="flex flex-wrap gap-2">
             <button
@@ -87,28 +87,28 @@ void registerReactBridge(void Function(String, String) handler) {
               className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono flex items-center gap-1.5"
             >
               <Thermometer className="w-3 h-3" />
-              <span>Установить климат 27°C</span>
+              <span>Set temperature to 27°C</span>
             </button>
             <button
               onClick={() => loadPrebuiltEvent('boost_particles', { count: 180, impulseForce: 5.5 })}
               className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono flex items-center gap-1.5"
             >
               <Sparkles className="w-3 h-3" />
-              <span>Генерировать 180 частиц</span>
+              <span>Generate 180 particles</span>
             </button>
             <button
               onClick={() => loadPrebuiltEvent('update_skin_color', { theme: 'neon', glowEnabled: true })}
               className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono flex items-center gap-1.5"
             >
               <Palette className="w-3 h-3" />
-              <span>Сменить скин на NEON</span>
+              <span>Switch to NEON theme</span>
             </button>
             <button
               onClick={() => loadPrebuiltEvent('set_chart_ticker', { ticker: 'ETH', forceRefresh: true })}
               className="text-[10px] py-1.5 px-3 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 rounded-lg border border-slate-700 transition-all font-mono flex items-center gap-1.5"
             >
               <TrendingUp className="w-3 h-3" />
-              <span>Переключить тикер на ETH</span>
+              <span>Switch ticker to ETH</span>
             </button>
         </div>
       </div>
@@ -121,11 +121,11 @@ void registerReactBridge(void Function(String, String) handler) {
           <div className="flex flex-col gap-3">
             <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-sky-400" />
-              <span>Панель ручной отправки пакета</span>
+              <span>Send a custom command</span>
             </h4>
             
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-slate-400 font-mono font-semibold">Тип команды bridge envelope</label>
+              <label className="text-[10px] text-slate-400 font-mono font-semibold">Command type</label>
               <input
                 type="text"
                 value={customEventName}
@@ -136,7 +136,7 @@ void registerReactBridge(void Function(String, String) handler) {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-slate-400 font-mono font-semibold">Данные Payload (JSON формат)</label>
+              <label className="text-[10px] text-slate-400 font-mono font-semibold">Payload (JSON)</label>
               <textarea
                 value={customPayload}
                 onChange={(e) => setCustomPayload(e.target.value)}
@@ -152,7 +152,7 @@ void registerReactBridge(void Function(String, String) handler) {
             className="w-full py-2.5 bg-sky-500 text-slate-950 hover:bg-sky-400 font-bold rounded-lg text-xs tracking-wider uppercase flex items-center justify-center gap-1.5 transition-all outline-none"
           >
             <Play className="fill-current w-3.5 h-3.5" />
-            <span>Выполнить отправку (Dispatch Event)</span>
+            <span>Dispatch Event</span>
           </button>
         </div>
 
@@ -161,7 +161,7 @@ void registerReactBridge(void Function(String, String) handler) {
           <div className="flex bg-slate-950 border-b border-slate-800 p-1.5 justify-between items-center px-3.5">
             <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
               <Code className="w-3.5 h-3.5 text-purple-400" />
-              <span>Микрокод реализации instance bridge</span>
+              <span>Instance bridge code</span>
             </span>
             <div className="flex gap-1">
               <button
@@ -196,11 +196,11 @@ void registerReactBridge(void Function(String, String) handler) {
       {/* Stability and Performance card metrics */}
       <div className="bg-slate-900/40 border border-slate-800 p-3 rounded-lg grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Доставка</span>
+          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Delivery</span>
           <span className="text-xs font-semibold text-sky-400 font-mono">JS call + JSON</span>
         </div>
         <div className="flex flex-col gap-0.5 border-l border-slate-800/60">
-          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Протокол</span>
+          <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono font-semibold">Protocol</span>
           <span className="text-xs font-semibold text-emerald-400 font-mono">Envelope v1</span>
         </div>
         <div className="flex flex-col gap-0.5 border-l border-slate-800/60">

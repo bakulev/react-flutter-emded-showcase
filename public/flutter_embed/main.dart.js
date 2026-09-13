@@ -33233,7 +33233,7 @@ this.a.$2(s.a,B.b_.wU(s.d,null))}catch(r){A.m1("protocol_error",A.ag(["message",
 $S:56}
 A.zc.prototype={
 P(a){var s=null
-return new A.ru(B.za,"Embedded Flutter Apps",A.a6N(s,A.a9_(B.a9,s,s,B.jl),"Roboto",!0),!1,s)}}
+return new A.ru(B.za,"React + Flutter Embedded Runtime Showcase | TTLabs",A.a6N(s,A.a9_(B.a9,s,s,B.jl),"Roboto",!0),!1,s)}}
 A.qm.prototype={
 ao(){return new A.ve(B.xa,184.22,B.zZ,null,null)}}
 A.ve.prototype={
@@ -33480,15 +33480,15 @@ P(a){var s=null,r=this.d
 return A.a8R(A.fN(A.d([A.mK(B.zu,this.c,s,56),B.uJ,A.cv("Flutter app is mounted",s,A.bV(s,s,r,s,s,s,s,s,s,s,s,20,s,s,B.bN,s,s,!0,s,s,s,s,s,s,s,s),s),B.uK,A.X0(A.cv("React controls will activate a real Dart widget tree in this host element.",s,A.bV(s,s,r.dl(0.64),s,s,s,s,s,s,s,s,13,s,s,s,s,1.35,!0,s,s,s,s,s,s,s,s),B.c9),s,340)],t.E),B.ai,B.af,B.cX),s,s)}}
 A.Ib.prototype={
 P(a){var s,r,q,p,o,n=this,m=null,l=A.oH(),k=n.c,j=n.r,i=n.w,h=t.E
-l=A.dL(A.fO(A.fN(A.d([A.CF(B.at,A.d([A.X0(new A.pA(12,(k-16)/14,B.dX,j,m,m,m,m),148,148),A.fN(A.d([A.cv(""+k+"\xb0C",m,A.bV(m,m,i,m,m,m,m,m,m,m,m,34,m,m,B.bO,m,m,!0,m,m,m,m,m,m,m,m),m),A.cv("climate sync",m,A.bV(m,m,i.dl(0.55),m,m,m,m,m,m,m,m,11,m,m,m,m,m,!0,m,m,m,m,m,m,m,m),m)],h),B.ai,B.af,B.cX)],h),B.eM),B.uJ,A.cv("\u0412\u043b\u0430\u0436\u043d\u043e\u0441\u0442\u044c 48% | HVAC \u043a\u043e\u043d\u0442\u0443\u0440 \u0430\u043a\u0442\u0438\u0432\u0435\u043d",m,A.bV(m,m,i.dl(0.66),m,m,m,m,m,m,m,m,12,m,m,m,m,m,!0,m,m,m,m,m,m,m,m),m)],h),B.ai,B.hz,B.Q),m,l,m,m,B.jT,1/0))
-j=A.dL(new A.nX("\u0412\u0435\u043d\u0442\u0438\u043b\u044f\u0446\u0438\u044f",B.zs,j,i,A.h7(A.A9(4,new A.a2U(n),!0,t.cl),B.Q,0),m))
+l=A.dL(A.fO(A.fN(A.d([A.CF(B.at,A.d([A.X0(new A.pA(12,(k-16)/14,B.dX,j,m,m,m,m),148,148),A.fN(A.d([A.cv(""+k+"\xb0C",m,A.bV(m,m,i,m,m,m,m,m,m,m,m,34,m,m,B.bO,m,m,!0,m,m,m,m,m,m,m,m),m),A.cv("climate sync",m,A.bV(m,m,i.dl(0.55),m,m,m,m,m,m,m,m,11,m,m,m,m,m,!0,m,m,m,m,m,m,m,m),m)],h),B.ai,B.af,B.cX)],h),B.eM),B.uJ,A.cv("Humidity 48% | HVAC circuit active",m,A.bV(m,m,i.dl(0.66),m,m,m,m,m,m,m,m,12,m,m,m,m,m,!0,m,m,m,m,m,m,m,m),m)],h),B.ai,B.hz,B.Q),m,l,m,m,B.jT,1/0))
+j=A.dL(new A.nX("Ventilation",B.zs,j,i,A.h7(A.A9(4,new A.a2U(n),!0,t.cl),B.Q,0),m))
 k=n.f
 s=k?B.k5:B.k4
 r=k?B.cx:B.fr
 q=A.mK(k?B.k4:B.k5,m,m,16)
 p=A.cv(k?"Unlock":"Lock",m,m,m)
 o=n.d
-return A.fN(A.d([l,B.dg,A.h7(A.d([j,B.H4,A.dL(new A.nX("\u0417\u0430\u043c\u043e\u043a",s,r,i,A.a5P(q,p,n.z,A.NC(k?B.yi:B.ye,B.j,m,m)),m))],h),B.Q,0),B.dg,new A.nX("\u041d\u0430\u043f\u043e\u043b\u044c\u043d\u0430\u044f \u043b\u0430\u043c\u043f\u0430",B.zv,B.fu,i,A.h7(A.d([A.dL(new A.u1(o,new A.a2V(n),0,100,B.fu,m)),A.X0(A.cv(""+o+"%",m,A.bV(m,m,i,m,m,m,m,m,m,m,m,m,m,m,B.b2,m,m,!0,m,m,m,m,m,m,m,m),B.dj),m,44)],h),B.Q,0),m)],h),B.ai,B.af,B.Q)}}
+return A.fN(A.d([l,B.dg,A.h7(A.d([j,B.H4,A.dL(new A.nX("Door lock",s,r,i,A.a5P(q,p,n.z,A.NC(k?B.yi:B.ye,B.j,m,m)),m))],h),B.Q,0),B.dg,new A.nX("Floor lamp",B.zv,B.fu,i,A.h7(A.d([A.dL(new A.u1(o,new A.a2V(n),0,100,B.fu,m)),A.X0(A.cv(""+o+"%",m,A.bV(m,m,i,m,m,m,m,m,m,m,m,m,m,m,B.b2,m,m,!0,m,m,m,m,m,m,m,m),B.dj),m,44)],h),B.Q,0),m)],h),B.ai,B.af,B.Q)}}
 A.a2U.prototype={
 $1(a){var s=null,r=this.a,q=r.e===a,p=q?r.r:B.dX
 return A.dL(new A.eU(B.z7,new A.qB(!1,new A.a2T(r,a),s,s,s,A.NC(p,q?B.ct:r.w.dl(0.7),B.z3,s),B.ac,s,!1,s,s,A.cv(""+a,s,s,s),s),s))},

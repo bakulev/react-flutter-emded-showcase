@@ -1,6 +1,8 @@
 # React + Real Flutter Web Embed Showcase
 
-Interactive React/Vite presentation that embeds a real Flutter Web application into a React host and demonstrates bidirectional JS interop between both runtimes.
+English-language React/Vite presentation that embeds a real Flutter Web application into a React host and demonstrates bidirectional JS interop between both runtimes. The seven slides, controls, bridge playground, error messages and embedded Flutter labels are in English.
+
+[Open the live presentation](https://d20ogki2gt3squ.cloudfront.net/) · [Browse all TTLabs demonstrations](https://demos.ttlabs.app/)
 
 The project started as a visual demo of Flutter-like widgets, but now the right-hand application is a real Flutter Web bundle built from Dart sources in [flutter_apps](flutter_apps) and served by Vite from [public/flutter_embed](public/flutter_embed). React owns the presentation, controls, logs, and host state. Flutter owns its own widget tree, CanvasKit rendering, timers, painters, and UI events.
 

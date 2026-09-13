@@ -3,45 +3,45 @@ import { SlideData } from '../types';
 export const slides: SlideData[] = [
   {
     id: 1,
-    title: "Внедрение Flutter приложений в React",
-    subtitle: "Host-element embedding: OLE-like UX без COM/OLE-объектной модели",
+    title: "Embedding Flutter apps in React",
+    subtitle: "Host-element embedding: an OLE-like experience without the COM/OLE object model",
     category: "intro",
-    contentMarkdown: `### Концепция embedded runtime island
+    contentMarkdown: `### An embedded runtime inside a host application
 
-В эпоху десктопных ОС **OLE** позволял внедрять интерактивные документы внутрь родительских приложений. В Web мы не получаем COM-объект, compound document или in-place activation, но можем реализовать похожий пользовательский паттерн: React содержит прямоугольную область, внутри которой живёт другой UI-runtime.
+On the desktop, **OLE** allowed interactive documents to be embedded inside parent applications. The web does not provide the same COM object model, compound documents or in-place activation, but it can offer a similar user experience: React contains an area managed by another UI runtime.
 
-Этот showcase показывает более точную архитектуру: **React host + Flutter Web embedded runtime + versioned JSON bridge**.
+This showcase demonstrates **a React host + an embedded Flutter Web runtime + a versioned JSON bridge**.
 
-#### Почему Flutter Web подходит для такого острова?
-1. **Пиксельная точность:** Flutter рендерит интерфейс через CanvasKit/Skia и ресурсы движка, сохраняя контролируемую графическую поверхность.
-2. **Изолированное состояние:** Приложение Flutter работает совершенно автономно, имея собственную систему управления стейтом и графический конвейер.
-3. **Явная интеграция:** React-приложение выступает хост-платформой, управляющей размерами, навигацией и передачей параметров внутрь Flutter-холста.
+#### Why use Flutter Web for the embedded application?
+1. **Rendering control:** Flutter uses CanvasKit/Skia and its engine assets to draw a controlled graphics surface.
+2. **Independent state:** The Flutter application has its own widget tree, state management and rendering pipeline.
+3. **Explicit integration:** React manages the host dimensions, navigation and parameters passed into the Flutter surface.
 `,
-    codeSnippet: `// Обычная HTML-структура для внедрения Flutter:
+    codeSnippet: `// HTML container for the embedded Flutter application:
 <div id="flutter_app_container" class="w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-slate-700">
-  <!-- Сюда Flutter Loader внедрит CanvasKit холст -->
+  <!-- Flutter Loader mounts the CanvasKit surface here -->
 </div>`,
     codeLanguage: "html",
     demoType: "none"
   },
   {
     id: 2,
-    title: "Архитектура Хоста и Инициализация",
-    subtitle: "Тонкая настройка _flutter.loader и instance namespace",
+    title: "Host architecture and initialization",
+    subtitle: "Configuring _flutter.loader and the instance namespace",
     category: "tech",
-    contentMarkdown: `### Как происходит инициализация холста
+    contentMarkdown: `### How the rendering surface starts
 
-Для контроля над встраиванием не используются тяжелые и небезопасные \`<iframe>\`. Вместо этого мы используем нативный API инициализации Flutter Web — **Flutter Loader API**.
+The **Flutter Loader API** mounts the Flutter application directly inside a React host element.
 
-Это позволяет подгружать ресурсы Flutter-приложения асинхронно, предотвращая фликеры экрана и коллизии с основным React-DOM. 
+Flutter resources load asynchronously. React owns the surrounding DOM, while Flutter manages the contents of its assigned surface.
 
-#### Шаги жизненного цикла инициализации:
-1. Загрузка \`flutter_bootstrap.js\` из \`/flutter_embed/\`.
-2. Регистрация instance в \`window.__reactFlutterEmbeds.instances\`.
-3. Выбор оптимального движка рендеринга (\`canvaskit\` для JS-сборки или \`skwasm\` для WASM-сборки).
-4. Передача \`hostElement\` в Flutter loader, чтобы \`<flutter-view>\` создавался внутри назначенного React \`<div>\`.
+#### Initialization lifecycle
+1. Load \`flutter_bootstrap.js\` from \`/flutter_embed/\`.
+2. Register the instance in \`window.__reactFlutterEmbeds.instances\`.
+3. Configure the renderer: \`canvaskit\` for this JavaScript build, or \`skwasm\` when using a compatible WebAssembly build.
+4. Pass \`hostElement\` to the loader so that \`<flutter-view>\` is created inside the designated React \`<div>\`.
 `,
-    codeSnippet: `// Безопасное встраивание реального Flutter Web bundle в React-компонент
+    codeSnippet: `// Mount a Flutter Web bundle inside a React component
 import React, { useEffect, useRef } from 'react';
 import { ensureFlutterBridgeInstance } from './bridgeProtocol';
 
@@ -66,19 +66,19 @@ export function FlutterHost() {
   {
     id: 3,
     title: "Bidirectional Bridge: React ⇄ Flutter",
-    subtitle: "Пересылка UI событий, стейта и триггеров через versioned JSON envelopes",
+    subtitle: "UI events, state and commands in versioned JSON envelopes",
     category: "bridge",
-    contentMarkdown: `### Интерактивная демонстрация #1: Smart Home Console
+    contentMarkdown: `### Interactive demo #1: Smart Home Console
 
-В embedded runtime важно не просто отрисовать чужой UI, а сделать **активный обмен стейтом**. Чтобы доказать работоспособность этого механизма, мы развернули живой интерактивный пульт управления «Умного дома». 
+An embedded runtime needs **active state exchange** as well as a visible UI. The smart home console demonstrates this with working controls in both React and Flutter.
 
-#### Сценарий синхронизации:
-1. Слева — элементы управления React (ползунки температуры, переключатели режимов, кнопки быстрого вызова сценариев).
-2. Справа — живое приложение Flutter, рендерирующее детальный 3D/Canvas виджет вентиляции, света и потребления энергии.
-3. Изменение состояния в React мгновенно изменяет отрисовку внутри Flutter.
-4. Клики на интерактивные элементы в Flutter (например, тапы по лампочке или кондиционеру) шлют события обратно в консоль React, перебивая локальное состояние!
+#### Try the synchronization
+1. The React panel provides temperature and brightness sliders, a fan control and a security lock.
+2. The Flutter application renders the corresponding smart home controls and indicators.
+3. Changing a React control updates the Flutter application.
+4. Interacting with a Flutter control sends an event back to React, updates the host state and adds a message to the bridge logs.
 `,
-    codeSnippet: `// 1. DART (Flutter) сторона: регистрируем bridge в instance namespace
+    codeSnippet: `// 1. DART (Flutter): register the bridge in the instance namespace
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
@@ -93,7 +93,7 @@ void registerBridge(void Function(Map<String, dynamic>) applyState) {
   // instance['reactToFlutter'] = callback;
 }
 
-// 2. REACT сторона: синхронизация состояния хоста
+// 2. REACT: synchronize the host state
 dispatchToEmbeddedFlutter('sync_state', {
   demoType: 'smarthome',
   state: { temperature: 24, brightness: 70 }
@@ -103,46 +103,47 @@ dispatchToEmbeddedFlutter('sync_state', {
   },
   {
     id: 4,
-    title: "Отрисовка частых событий",
-    subtitle: "Финансовый виджет с Dart timer и React host controls",
+    title: "Rendering frequent updates",
+    subtitle: "A financial widget with a Dart timer and React host controls",
     category: "embed",
-    contentMarkdown: `### Интерактивная демонстрация #2: Financial Flutter Chart
+    contentMarkdown: `### Interactive demo #2: Financial Flutter Chart
 
-Частые события (котировки, графики свечей, обновление состояния) часто неудобно пропускать через React DOM, если сама визуализация живёт в другом графическом runtime. 
+When a chart lives in its own graphics runtime, its frequent visual updates can stay within that runtime.
 
-Связка React + Flutter решает это прагматично: React работает как фрейм-контейнер и панель настроек активов, а Flutter внутри своего surface обновляет график и отправляет события обратно в host.
+React provides the host container and controls. Flutter updates the chart inside its surface and sends events back to the host.
 
-#### В этой демонстрации:
-* **React** посылает новые заказы и управляет фильтром («Apple», «Tesla», «Ethereum»).
-* **Flutter** генерирует демо-тики Dart timer-ом, обновляет свечные паттерны и сообщает React о \`live_ticker_tick\`.
-* В консоль шины выводятся реальные события из Dart isolate: тики рынка, клики по свечам и торговые команды.
+#### In this demo
+* **React** selects the ticker (Apple, Tesla or Ethereum) and sends simulated trade commands.
+* **Flutter** generates demo ticks with a Dart timer, updates the chart and emits \`live_ticker_tick\` events.
+* The bridge logs show events from the running Dart application: simulated price ticks, candle selections and demo trade commands. No live market feed or real trading is connected.
 `,
-    codeSnippet: `// Пример команды host -> Flutter financial view:
+    codeSnippet: `// Example command from the host to the Flutter financial view:
 dispatchToEmbeddedFlutter('set_chart_ticker', {
   ticker: 'ETH',
   source: 'react_controls'
 });
 
-// Flutter отвечает событием live_ticker_tick через тот же envelope bridge.`,
+// Flutter responds with live_ticker_tick events through the same envelope bridge.`,
     codeLanguage: "javascript",
     demoType: "financial"
   },
   {
     id: 5,
-    title: "Генеративная анимация и кастомные кисти",
-    subtitle: "CustomPainter Flutter-модули на службе визуального сторителлинга",
+    title: "Generative animation and custom painting",
+    subtitle: "Flutter CustomPainter modules for interactive visuals",
     category: "embed",
-    contentMarkdown: `### Интерактивная демонстрация #3: Creative Canvas
+    contentMarkdown: `### Interactive demo #3: Creative Canvas
 
-Сложные геометрические графики и генеративная математика в браузере часто требуют тяжелых WebGL-библиотек вроде Three.js. Во Flutter для этого есть нативный и чистый класс \`CustomPainter\`.
+Flutter's \`CustomPainter\` provides a drawing surface for custom geometry and generative animation.
 
-Мы встроили интерактивный холст частиц. Вы можете рисовать и добавлять силы притяжения.
+The embedded particle canvas responds to host controls and pointer interaction.
 
-#### Возможности взаимодействия:
-* Слайдер волновых колебаний на React-панели напрямую меняет физические уравнения в недрах рендерера Flutter.
-* Полноценно работает адаптивность: сожмите или растяните контейнер, Flutter мгновенно перестроит область отрисовки (\`MediaQuery\`), сохраняя фокус отрисованных частиц в правильных геометрических пропорциях!
+#### Try the interaction
+* Adjust the wave amplitude in React to change the particle animation inside Flutter.
+* Change the particle count to see the canvas update through the bridge.
+* Resize the container: Flutter uses the available layout dimensions to redraw the surface.
 `,
-    codeSnippet: `// Dart: кастомный рендер физики частиц на Canvas
+    codeSnippet: `// Dart: draw a custom particle animation on Canvas
 class ParticlePainter extends CustomPainter {
   final List<Particle> particles;
   final double waveAmplitude;
@@ -165,19 +166,19 @@ class ParticlePainter extends CustomPainter {
   },
   {
     id: 6,
-    title: "Интерактивная песочница Bridge",
-    subtitle: "Отправьте JSON-команду и проверьте формат обработки",
+    title: "Interactive bridge playground",
+    subtitle: "Send a JSON command and inspect the response",
     category: "bridge",
-    contentMarkdown: `### Тестирование контракта моста
+    contentMarkdown: `### Explore the bridge contract
 
-Для глубокого понимания мы создали интерактивный пульт. Здесь можно послать сигнал во Flutter-оболочку и увидеть, в каком формате сообщение было доставлено и подтверждено.
+Use the playground to send a command to the Flutter application and inspect how it is delivered and acknowledged.
 
-#### Выполните эксперимент:
-1. Выберите тип команды.
-2. Нажмите **«Выполнить отправку (Dispatch Event)»**.
-3. Изучите лог моста внизу. Сообщения идут как \`{ type, version, requestId, instanceId, payload }\`, поэтому их удобно трассировать и валидировать.
+#### Try it
+1. Choose a prebuilt command or enter a command type and JSON payload.
+2. Click **Dispatch Event**.
+3. Inspect the bridge logs below. Messages use \`{ type, version, requestId, instanceId, payload }\` envelopes so they can be traced and validated.
 `,
-    codeSnippet: `// Реальный мост для отправки кастомных сообщений
+    codeSnippet: `// Send custom messages through the bridge
 function dispatchToFlutter(type, payload) {
   return dispatchToEmbeddedFlutter(type, payload, 'primary-flutter-surface');
 }
@@ -188,23 +189,23 @@ dispatchToFlutter('boost_particles', { count: 180 });`,
   },
   {
     id: 7,
-    title: "Итоги и лучшие практики интеграции",
-    subtitle: "Чек-лист для внедрения архитектуры в крупных Enterprise-системах",
+    title: "Integration guidance and next steps",
+    subtitle: "A checklist for adopting the architecture in enterprise applications",
     category: "summary",
-    contentMarkdown: `### Когда стоит внедрять React + Flutter embedded runtime?
+    contentMarkdown: `### When is an embedded React + Flutter runtime useful?
 
-Эта синергия идеальна для средних и крупных корпоративных порталов, где основной дашборд и пользовательский путь написаны на **React (Vue/Svelte)**, но имеются специализированные тяжелые сервисы:
-* Сложные ГИС-карты или интерактивные схемы размещения оборудования.
-* Многофункциональные CAD/CAM превью-конвейеры.
-* Кроссплатформенные виджеты, которые уже написаны на Flutter для Android/iOS, и их нужно переиспользовать в Web без переписывания на React!
+Consider this pattern for portals whose main dashboard and navigation use **React (or Vue/Svelte)** and which need specialized interactive modules:
+* GIS maps or equipment layout diagrams.
+* CAD/CAM previews.
+* Existing Flutter widgets from Android/iOS applications that can also run on the web.
 
-#### Чек-лист оптимизации:
-1. **Размер бандла:** Для уменьшения времени первой загрузки используйте метод загрузки Flutter по требованию (ленивая инициализация при заходе на нужный слайд/страницу).
-2. **Используйте WASM:** Сборка под Flutter WASM повышает скорость численной физики и криптографии на порядок.
-3. **Явный контракт событий:** Используйте versioned JSON envelopes, \`requestId\`, instance namespace и события \`ready/error/dispose\`.
-4. **Честные метрики:** Не пишите performance claims в UI без измерений. Для production добавьте реальные замеры latency, drops и memory.
+#### Integration checklist
+1. **Bundle size:** Load Flutter on demand when the relevant page or module opens to reduce initial loading work.
+2. **WebAssembly:** Evaluate a Flutter WASM build where supported, and measure its performance with your actual workload.
+3. **Event contract:** Use versioned JSON envelopes, \`requestId\`, an instance namespace and \`ready/error/dispose\` lifecycle events.
+4. **Measured performance:** Validate latency, dropped updates and memory usage before making production performance claims.
 `,
-    codeSnippet: `// Продакшн-сборка Flutter-микрофронтенда для встраивания:
+    codeSnippet: `// Build the embedded Flutter application for production:
 cd flutter_apps
 ../.flutter-sdk/bin/flutter build web --release \
   --pwa-strategy=none \
@@ -215,9 +216,9 @@ cd flutter_apps
   }
 ];
 export const categories = [
-  { id: 'intro', label: 'Введение', icon: 'Sparkles' },
-  { id: 'tech', label: 'Инициализация', icon: 'Cpu' },
-  { id: 'bridge', label: 'Мост событий', icon: 'Radio' },
-  { id: 'embed', label: 'Живые приложения', icon: 'Layers' },
-  { id: 'summary', label: 'Резюме', icon: 'CheckCircle' }
+  { id: 'intro', label: 'Introduction', icon: 'Sparkles' },
+  { id: 'tech', label: 'Initialization', icon: 'Cpu' },
+  { id: 'bridge', label: 'Event bridge', icon: 'Radio' },
+  { id: 'embed', label: 'Live applications', icon: 'Layers' },
+  { id: 'summary', label: 'Summary', icon: 'CheckCircle' }
 ];

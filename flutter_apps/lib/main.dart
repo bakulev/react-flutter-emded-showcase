@@ -25,7 +25,7 @@ class EmbeddedFlutterApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Embedded Flutter Apps',
+      title: 'React + Flutter Embedded Runtime Showcase | TTLabs',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF38BDF8),
@@ -748,7 +748,7 @@ class _SmartHomeView extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Влажность 48% | HVAC контур активен',
+                  'Humidity 48% | HVAC circuit active',
                   style: TextStyle(
                     color: foreground.withValues(alpha: 0.66),
                     fontSize: 12,
@@ -763,7 +763,7 @@ class _SmartHomeView extends StatelessWidget {
           children: [
             Expanded(
               child: _ControlPanel(
-                title: 'Вентиляция',
+                title: 'Ventilation',
                 icon: Icons.air_rounded,
                 accentColor: accentColor,
                 foreground: foreground,
@@ -795,7 +795,7 @@ class _SmartHomeView extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _ControlPanel(
-                title: 'Замок',
+                title: 'Door lock',
                 icon: securityLocked
                     ? Icons.lock_rounded
                     : Icons.lock_open_rounded,
@@ -825,7 +825,7 @@ class _SmartHomeView extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _ControlPanel(
-          title: 'Напольная лампа',
+          title: 'Floor lamp',
           icon: Icons.lightbulb_rounded,
           accentColor: const Color(0xFFFBBF24),
           foreground: foreground,

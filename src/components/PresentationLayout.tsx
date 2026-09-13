@@ -259,7 +259,7 @@ export default function PresentationLayout() {
               dispatchBridgeLog('react', 'bridge_connection_rebooted', { rebootDelivered, syncDelivered });
             }}
             className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white px-3 py-1.5 rounded-lg font-mono text-xs text-slate-300 transition-all border border-slate-700"
-            title="Перезагрузить все виджеты Flutter во фреймах"
+            title="Reset the embedded Flutter widgets"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Reboot Flutter</span>
@@ -278,7 +278,7 @@ export default function PresentationLayout() {
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-xs text-slate-400 font-mono uppercase bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
                 {currentCategoryIcon(currentSlide.category)}
-                <span>ЧАСТЬ {currentSlideIndex + 1} ИЗ {slides.length}: {categories.find(c => c.id === currentSlide.category)?.label}</span>
+                <span>PART {currentSlideIndex + 1} OF {slides.length}: {categories.find(c => c.id === currentSlide.category)?.label}</span>
               </span>
               <span className="text-[10px] font-mono text-slate-500 font-semibold tracking-wide">
                 SLIDE_{currentSlide.id.toString().padStart(2, '0')}
@@ -310,7 +310,7 @@ export default function PresentationLayout() {
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
                   <span className="text-[11px] font-mono text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <Sliders className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
-                    <span>Управление хостом React (Instance Bridge)</span>
+                    <span>React host controls (Instance Bridge)</span>
                   </span>
                   <span className="text-[9px] bg-sky-950 text-sky-300 font-mono px-2 py-0.5 rounded-full border border-sky-900/30">Active Link</span>
                 </div>
@@ -321,7 +321,7 @@ export default function PresentationLayout() {
                     {/* Temperature slider on React Side */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-300">Термостат</span>
+                        <span className="text-slate-300">Thermostat</span>
                         <span className="font-mono text-sky-400 font-bold">{reactState.temperature}°C</span>
                       </div>
                       <input 
@@ -332,13 +332,13 @@ export default function PresentationLayout() {
                         onChange={(e) => updateReactControlAndNotify('temperature', Number(e.target.value))}
                         className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
                       />
-                      <span className="text-[9px] text-slate-500 font-mono">Передает событие: 'update_temp'</span>
+                      <span className="text-[9px] text-slate-500 font-mono">Sends event: 'update_temp'</span>
                     </div>
 
                     {/* Lamp brightness slider on React Side */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-300">Яркость лампы</span>
+                        <span className="text-slate-300">Lamp brightness</span>
                         <span className="font-mono text-sky-400 font-bold">{reactState.brightness}%</span>
                       </div>
                       <input 
@@ -349,12 +349,12 @@ export default function PresentationLayout() {
                         onChange={(e) => updateReactControlAndNotify('brightness', Number(e.target.value))}
                         className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
                       />
-                      <span className="text-[9px] text-slate-500 font-mono">Передает событие: 'update_lamp'</span>
+                      <span className="text-[9px] text-slate-500 font-mono">Sends event: 'update_lamp'</span>
                     </div>
 
                     {/* AC Fan step controls inside React Panel */}
                     <div className="flex flex-col gap-1.5 justify-between">
-                      <span className="text-xs text-slate-300">Вентилятор:</span>
+                      <span className="text-xs text-slate-300">Fan:</span>
                       <div className="flex gap-2">
                         {[0, 1, 2, 3].map(speed => (
                           <button
@@ -374,7 +374,7 @@ export default function PresentationLayout() {
 
                     {/* Door physical gate logic inside React Panel */}
                     <div className="flex flex-col gap-1.5 justify-between">
-                      <span className="text-xs text-slate-300">Защитный замок ворот:</span>
+                      <span className="text-xs text-slate-300">Security lock:</span>
                       <button
                         onClick={() => updateReactControlAndNotify('securityLocked', !reactState.securityLocked)}
                         className={`w-full py-1 px-3 text-xs tracking-wide font-bold uppercase rounded-lg transition-all text-center border ${
@@ -383,7 +383,7 @@ export default function PresentationLayout() {
                             : 'bg-emerald-500 text-slate-950 border-emerald-500 hover:bg-emerald-400'
                         }`}
                       >
-                        {reactState.securityLocked ? 'АКТИВЕН / LOCKED' : 'СНЯТ / UNLOCKED'}
+                        {reactState.securityLocked ? 'LOCKED' : 'UNLOCKED'}
                       </button>
                     </div>
                   </div>
@@ -394,7 +394,7 @@ export default function PresentationLayout() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Ticker selector */}
                     <div className="flex flex-col gap-1.5">
-                      <span className="text-xs text-slate-300">Активный Финансовый Тикер:</span>
+                      <span className="text-xs text-slate-300">Active ticker:</span>
                       <div className="grid grid-cols-4 gap-1">
                         {['AAPL', 'TSLA', 'BTC', 'ETH'].map(t => (
                           <button
@@ -414,7 +414,7 @@ export default function PresentationLayout() {
 
                     {/* Chart style selection */}
                     <div className="flex flex-col gap-1.5">
-                      <span className="text-xs text-slate-300">Стиль отрисовки WebGL:</span>
+                      <span className="text-xs text-slate-300">Chart style:</span>
                       <div className="flex gap-2">
                         <button
                           onClick={() => updateReactControlAndNotify('chartType', 'candle')}
@@ -422,7 +422,7 @@ export default function PresentationLayout() {
                             reactState.chartType === 'candle' ? 'bg-sky-400 text-slate-950 font-extrabold' : 'bg-slate-800 text-slate-400'
                           }`}
                         >
-                          Свечной узел
+                          Candlesticks
                         </button>
                         <button
                           onClick={() => updateReactControlAndNotify('chartType', 'line')}
@@ -430,7 +430,7 @@ export default function PresentationLayout() {
                             reactState.chartType === 'line' ? 'bg-sky-400 text-slate-950 font-extrabold font-bold' : 'bg-slate-800 text-slate-400'
                           }`}
                         >
-                          Вектор кривой
+                          Line chart
                         </button>
                       </div>
                     </div>
@@ -438,7 +438,7 @@ export default function PresentationLayout() {
                     {/* High frequency event speed trigger slider */}
                     <div className="flex flex-col gap-1.5 sm:col-span-2">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-300">Частота тиков события котировки:</span>
+                        <span className="text-slate-300">Demo tick frequency:</span>
                         <span className="font-mono text-amber-400 font-bold uppercase tracking-wider text-[11px]">
                           {reactState.frequency === 'high' ? 'High Speed (~500ms)' : reactState.frequency === 'mid' ? 'Medium (~2s)' : 'Slow (~5s)'}
                         </span>
@@ -468,7 +468,7 @@ export default function PresentationLayout() {
                     {/* Amplitude slider */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-300">Амплитуда колебания</span>
+                        <span className="text-slate-300">Wave amplitude</span>
                         <span className="font-mono text-sky-400 font-semibold">{reactState.waveAmplitude}px</span>
                       </div>
                       <input 
@@ -484,8 +484,8 @@ export default function PresentationLayout() {
                     {/* Particle density controls */}
                     <div className="flex flex-col gap-1.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-300">Количество частиц</span>
-                        <span className="font-mono text-sky-400 font-semibold">{reactState.particleCount} шт.</span>
+                        <span className="text-slate-300">Particle count</span>
+                        <span className="font-mono text-sky-400 font-semibold">{reactState.particleCount} particles</span>
                       </div>
                       <input 
                         type="range"
@@ -507,7 +507,7 @@ export default function PresentationLayout() {
                 <div className="bg-slate-950/80 border-b border-slate-800 py-2 px-4 flex items-center justify-between">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                     <FileCode2 className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Спецификация интеграционного интерфейса</span>
+                    <span>Integration interface reference</span>
                   </span>
                   <span className="text-[9px] font-mono text-slate-500 uppercase font-semibold">{currentSlide.codeLanguage}</span>
                 </div>
@@ -531,7 +531,7 @@ export default function PresentationLayout() {
               }`}
             >
               <ChevronLeft className="w-4 h-4" />
-              <span>Предыдущий</span>
+              <span>Previous</span>
             </button>
 
             {/* Dynamic dot indicators */}
@@ -548,7 +548,7 @@ export default function PresentationLayout() {
                       ? 'bg-sky-400 scale-125 shadow-[0_0_6px_rgba(56,189,248,0.4)]' 
                       : 'bg-slate-800 hover:bg-slate-700'
                   }`}
-                  title={`Перейти к слайду ${i + 1}`}
+                  title={`Go to slide ${i + 1}`}
                 ></button>
               ))}
             </div>
@@ -562,14 +562,14 @@ export default function PresentationLayout() {
                   : 'bg-sky-500 text-slate-950 hover:bg-sky-400 shadow-md shadow-sky-500/10'
               }`}
             >
-              <span>Следующий</span>
+              <span>Next</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Right Side: High-fidelity simulator panel & telemetry console logs */}
-        <div className="w-full xl:w-[52%] bg-slate-950 p-6 xl:p-8 flex flex-col gap-6 overflow-y-auto max-h-[85vh] xl:max-h-[calc(100vh-70px)] min-h-0">
+        <div className="w-full xl:w-[52%] bg-slate-950 p-6 xl:p-8 flex flex-col gap-6 overflow-y-auto xl:max-h-[calc(100vh-70px)] min-h-0">
           
           <div className="flex-1 flex flex-col min-h-0 gap-6">
             
@@ -578,11 +578,11 @@ export default function PresentationLayout() {
                 <div className="flex items-center gap-2">
                   <Tv className="w-4 h-4 text-sky-400" />
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                    Активное окно внедрения (Real Flutter Web Embed)
+                    Live application (Real Flutter Web Embed)
                   </span>
                 </div>
                 {currentSlide.demoType === 'none' && (
-                  <span className="text-[10px] text-slate-500 italic font-mono">Flutter уже смонтирован и ждет команд React</span>
+                  <span className="text-[10px] text-slate-500 italic font-mono">Flutter is mounted and ready for React commands</span>
                 )}
               </div>
 
@@ -601,7 +601,7 @@ export default function PresentationLayout() {
                 <div className="mb-2 flex items-center gap-2">
                   <FileCode2 className="w-4 h-4 text-purple-400 animate-pulse" />
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                    Интерактивная консоль песочницы разработчика
+                    Interactive bridge playground
                   </span>
                 </div>
 

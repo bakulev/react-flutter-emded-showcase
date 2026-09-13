@@ -280,7 +280,7 @@ export default function FlutterHost({
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative" id="flutter_window_frame">
+    <div className="flex flex-col h-[680px] xl:h-full bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative" id="flutter_window_frame">
       <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-800 text-slate-400 text-xs font-mono select-none">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex gap-1.5 shrink-0">
@@ -297,7 +297,7 @@ export default function FlutterHost({
           <button
             onClick={handleReboot}
             className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded text-[11px] hover:bg-slate-800 text-sky-400 border border-sky-400/20 transition-colors"
-            title="Перезапустить состояние Dart-приложения"
+            title="Reset the Dart application state"
           >
             <RefreshCw className="w-3 h-3" />
             <span>Reboot Dart</span>
@@ -332,10 +332,10 @@ export default function FlutterHost({
               <Cpu className="w-12 h-12 text-sky-400 mb-4 animate-pulse" />
             )}
             <span className="text-slate-200 font-semibold text-sm">
-              {engineStatus === 'failed' ? 'Не удалось загрузить Flutter Web bundle' : 'Загрузка настоящего Flutter Web приложения...'}
+              {engineStatus === 'failed' ? 'Could not load the Flutter Web bundle' : 'Loading the Flutter Web application...'}
             </span>
             <span className="text-slate-500 font-mono text-[10px] mt-2 max-w-md">
-              {loadError ?? 'Ожидаем flutter_bootstrap.js, main.dart.js и CanvasKit assets из /public/flutter_embed'}
+              {loadError ?? 'Waiting for the Flutter application and rendering assets to load'}
             </span>
           </div>
         )}
